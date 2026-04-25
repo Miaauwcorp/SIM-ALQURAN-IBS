@@ -41,5 +41,18 @@
       allow="fullscreen; camera; microphone; display-capture; geolocation;">
     </iframe>
   </div>
+
+<script>
+  window.addEventListener("message", function (event) {
+    const data = event.data || {};
+
+    if (!data || data.type !== "SIM_GOOGLE_SSO_RESULT") return;
+
+    const iframe = document.getElementById("app");
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(data, "*");
+    }
+  });
+</script>
 </body>
 </html>
