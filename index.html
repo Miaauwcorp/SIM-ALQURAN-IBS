@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIM MUROJAAH IBS RIAU</title>
+  <title>SISTEM MANAJEMEN SAQU SANTRI</title>
   <link rel="icon" href="https://ibs.sch.id/assets/icon/LOGO%20IBS%20BARU.png" />
   <style>
     html, body {
@@ -12,12 +12,12 @@
       width: 100%;
       height: 100%;
       background-color: #eee;
-      overflow: hidden; /* Mencegah scroll ganda */
+      overflow: hidden;
     }
 
     .iframe-container {
       width: 100%;
-      height: 100dvh; /* Menggunakan dvh agar pas di mobile browser */
+      height: 100dvh;
       overflow: hidden;
     }
 
@@ -33,7 +33,6 @@
   <div class="iframe-container">
     <iframe
       id="app"
-      src="https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec"
       scrolling="yes"
       allowfullscreen="true"
       webkitallowfullscreen="true"
@@ -42,17 +41,35 @@
     </iframe>
   </div>
 
-<script>
-  window.addEventListener("message", function (event) {
-    const data = event.data || {};
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
-    if (!data || data.type !== "SIM_GOOGLE_SSO_RESULT") return;
+    function buildIframeUrl() {
+      const currentParams = new URLSearchParams(window.location.search);
+      const iframeParams = new URLSearchParams();
 
-    const iframe = document.getElementById("app");
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage(data, "*");
+      const page = currentParams.get("page") || "";
+      const nama = currentParams.get("nama") || "";
+
+      if (page) iframeParams.set("page", page);
+      if (nama) iframeParams.set("nama", nama);
+
+      const query = iframeParams.toString();
+      return query ? `${GAS_URL}?${query}` : GAS_URL;
     }
-  });
-</script>
+
+    document.getElementById("app").src = buildIframeUrl();
+
+    window.addEventListener("message", function (event) {
+      const data = event.data || {};
+
+      if (!data || data.type !== "SIM_GOOGLE_SSO_RESULT") return;
+
+      const iframe = document.getElementById("app");
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(data, "*");
+      }
+    });
+  </script>
 </body>
 </html>
