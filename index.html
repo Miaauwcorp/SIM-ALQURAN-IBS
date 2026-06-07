@@ -3,8 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>SIM MUROJAAH IBS RIAU</title>
-  <link rel="icon" href="https://ibs.sch.id/assets/icon/LOGO%20IBS%20BARU.png" />
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#15803d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+
   <style>
     html, body {
       margin: 0;
@@ -17,8 +29,10 @@
 
     .iframe-container {
       width: 100%;
+      height: 100vh;
       height: 100dvh;
       overflow: hidden;
+      background: #eee;
     }
 
     iframe {
@@ -26,13 +40,57 @@
       width: 100%;
       height: 100%;
       border: none;
+      background: #fff;
+    }
+
+    #offline-page {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      box-sizing: border-box;
+      background: linear-gradient(135deg, #0b3d2c, #15803d);
+      color: #fff;
+    }
+
+    #offline-page .box {
+      max-width: 420px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+    }
+
+    #offline-page h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    #offline-page p {
+      margin: 0;
+      line-height: 1.6;
     }
   </style>
 </head>
+
 <body>
-  <div class="iframe-container">
+  <div id="offline-page">
+    <div class="box">
+      <h1>SIM MUROJAAH IBS</h1>
+      <p>Aplikasi sedang offline atau koneksi internet tidak tersedia. Silakan periksa koneksi, lalu buka kembali aplikasi.</p>
+    </div>
+  </div>
+
+  <div class="iframe-container" id="iframe-container">
     <iframe
       id="app"
+      title="SIM MUROJAAH IBS RIAU"
       scrolling="yes"
       allowfullscreen="true"
       webkitallowfullscreen="true"
@@ -58,7 +116,33 @@
       return query ? `${GAS_URL}?${query}` : GAS_URL;
     }
 
-    document.getElementById("app").src = buildIframeUrl();
+    function loadApp() {
+      const iframe = document.getElementById("app");
+      iframe.src = buildIframeUrl();
+    }
+
+    function showOfflineIfNeeded() {
+      const offlinePage = document.getElementById("offline-page");
+      const iframeContainer = document.getElementById("iframe-container");
+
+      if (!navigator.onLine) {
+        offlinePage.style.display = "flex";
+        iframeContainer.style.display = "none";
+      } else {
+        offlinePage.style.display = "none";
+        iframeContainer.style.display = "block";
+      }
+    }
+
+    loadApp();
+    showOfflineIfNeeded();
+
+    window.addEventListener("online", function () {
+      showOfflineIfNeeded();
+      loadApp();
+    });
+
+    window.addEventListener("offline", showOfflineIfNeeded);
 
     window.addEventListener("message", function (event) {
       const data = event.data || {};
@@ -70,6 +154,18 @@
         iframe.contentWindow.postMessage(data, "*");
       }
     });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js")
+          .then(function () {
+            console.log("Service Worker aktif");
+          })
+          .catch(function (err) {
+            console.error("Service Worker gagal:", err);
+          });
+      });
+    }
   </script>
 </body>
 </html>
