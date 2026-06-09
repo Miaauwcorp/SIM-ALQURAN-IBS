@@ -216,150 +216,168 @@
     </iframe>
   </div>
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
+ <script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
-    // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
-    const LOAD_TIMEOUT_MS = 15000;
+  const LOAD_TIMEOUT_MS = 20000;
+  const ONLINE_RELOAD_DELAY_MS = 1200;
 
-    let loadTimer = null;
-    let iframeLoaded = false;
+  let loadTimer = null;
+  let iframeLoaded = false;
+  let currentLoadId = 0;
 
-    function buildIframeUrl(forceReload = false) {
-      const currentParams = new URLSearchParams(window.location.search);
-      const iframeParams = new URLSearchParams();
+  function buildIframeUrl(forceReload = false) {
+    const currentParams = new URLSearchParams(window.location.search);
+    const iframeParams = new URLSearchParams();
 
-      const page = currentParams.get("page") || "";
-      const nama = currentParams.get("nama") || "";
+    const page = currentParams.get("page") || "";
+    const nama = currentParams.get("nama") || "";
 
-      if (page) iframeParams.set("page", page);
-      if (nama) iframeParams.set("nama", nama);
+    if (page) iframeParams.set("page", page);
+    if (nama) iframeParams.set("nama", nama);
 
-      // Dipakai saat tombol Coba Lagi ditekan agar iframe benar-benar memuat ulang
-      if (forceReload) {
-        iframeParams.set("_reload", Date.now().toString());
+    if (forceReload) {
+      iframeParams.set("_reload", Date.now().toString());
+    }
+
+    const query = iframeParams.toString();
+    return query ? `${GAS_URL}?${query}` : GAS_URL;
+  }
+
+  function setView(view) {
+    const loadingPage = document.getElementById("loading-page");
+    const offlinePage = document.getElementById("offline-page");
+    const serverPage = document.getElementById("server-page");
+    const iframeContainer = document.getElementById("iframe-container");
+
+    loadingPage.style.display = view === "loading" ? "flex" : "none";
+    offlinePage.style.display = view === "offline" ? "flex" : "none";
+    serverPage.style.display = view === "server" ? "flex" : "none";
+    iframeContainer.style.display = view === "app" ? "block" : "none";
+  }
+
+  function clearLoadTimer() {
+    if (loadTimer) {
+      clearTimeout(loadTimer);
+      loadTimer = null;
+    }
+  }
+
+  function startLoadTimer(loadId) {
+    clearLoadTimer();
+
+    loadTimer = setTimeout(function () {
+      if (!iframeLoaded && navigator.onLine && loadId === currentLoadId) {
+        setView("server");
       }
+    }, LOAD_TIMEOUT_MS);
+  }
 
-      const query = iframeParams.toString();
-      return query ? `${GAS_URL}?${query}` : GAS_URL;
-    }
-
-    function setView(view) {
-      const loadingPage = document.getElementById("loading-page");
-      const offlinePage = document.getElementById("offline-page");
-      const serverPage = document.getElementById("server-page");
-      const iframeContainer = document.getElementById("iframe-container");
-
-      loadingPage.style.display = view === "loading" ? "flex" : "none";
-      offlinePage.style.display = view === "offline" ? "flex" : "none";
-      serverPage.style.display = view === "server" ? "flex" : "none";
-      iframeContainer.style.display = view === "app" ? "block" : "none";
-    }
-
-    function clearLoadTimer() {
-      if (loadTimer) {
-        clearTimeout(loadTimer);
-        loadTimer = null;
-      }
-    }
-
-    function startLoadTimer() {
-      clearLoadTimer();
-
-      loadTimer = setTimeout(function () {
-        if (!iframeLoaded && navigator.onLine) {
-          setView("server");
-        }
-      }, LOAD_TIMEOUT_MS);
-    }
-
-    function loadApp(forceReload = false) {
-      const iframe = document.getElementById("app");
-
-      if (!navigator.onLine) {
-        clearLoadTimer();
-        setView("offline");
-        return;
-      }
-
-      iframeLoaded = false;
-      setView("loading");
-      startLoadTimer();
-
-      iframe.src = buildIframeUrl(forceReload);
-    }
-
-    function retryApp() {
-      if (!navigator.onLine) {
-        setView("offline");
-        return;
-      }
-
-      loadApp(true);
-    }
-
-    function showOfflineIfNeeded() {
-      if (!navigator.onLine) {
-        clearLoadTimer();
-        setView("offline");
-      }
-    }
-
+  function loadApp(forceReload = false) {
     const iframe = document.getElementById("app");
 
-    iframe.addEventListener("load", function () {
-      const src = iframe.getAttribute("src") || "";
+    currentLoadId++;
+    const loadId = currentLoadId;
 
-      if (!src || src === "about:blank") return;
-
-      iframeLoaded = true;
+    if (!navigator.onLine) {
       clearLoadTimer();
-      setView("app");
-    });
-
-    iframe.addEventListener("error", function () {
-      if (navigator.onLine) {
-        clearLoadTimer();
-        setView("server");
-      } else {
-        clearLoadTimer();
-        setView("offline");
-      }
-    });
-
-    loadApp();
-    showOfflineIfNeeded();
-
-    window.addEventListener("online", function () {
-      loadApp(true);
-    });
-
-    window.addEventListener("offline", function () {
-      showOfflineIfNeeded();
-    });
-
-    window.addEventListener("message", function (event) {
-      const data = event.data || {};
-
-      if (!data || data.type !== "SIM_GOOGLE_SSO_RESULT") return;
-
-      const iframe = document.getElementById("app");
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage(data, "*");
-      }
-    });
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("./sw.js")
-          .then(function () {
-            console.log("Service Worker aktif");
-          })
-          .catch(function (err) {
-            console.error("Service Worker gagal:", err);
-          });
-      });
+      iframeLoaded = false;
+      iframe.src = "about:blank";
+      setView("offline");
+      return;
     }
-  </script>
+
+    iframeLoaded = false;
+    setView("loading");
+    startLoadTimer(loadId);
+
+    // Penting: kosongkan iframe dulu supaya benar-benar reload
+    iframe.src = "about:blank";
+
+    setTimeout(function () {
+      if (!navigator.onLine || loadId !== currentLoadId) return;
+
+      iframe.src = buildIframeUrl(forceReload);
+    }, 300);
+  }
+
+  function retryApp() {
+    loadApp(true);
+  }
+
+  function handleOnline() {
+    setView("loading");
+
+    // Tunggu sebentar karena status online kadang muncul sebelum koneksi stabil
+    setTimeout(function () {
+      loadApp(true);
+    }, ONLINE_RELOAD_DELAY_MS);
+  }
+
+  function handleOffline() {
+    const iframe = document.getElementById("app");
+
+    clearLoadTimer();
+    iframeLoaded = false;
+    iframe.src = "about:blank";
+    setView("offline");
+  }
+
+  const iframe = document.getElementById("app");
+
+  iframe.addEventListener("load", function () {
+    const src = iframe.getAttribute("src") || "";
+
+    if (!src || src === "about:blank") return;
+
+    iframeLoaded = true;
+    clearLoadTimer();
+    setView("app");
+  });
+
+  iframe.addEventListener("error", function () {
+    clearLoadTimer();
+
+    if (navigator.onLine) {
+      setView("server");
+    } else {
+      setView("offline");
+    }
+  });
+
+  window.addEventListener("online", handleOnline);
+  window.addEventListener("offline", handleOffline);
+
+  window.addEventListener("message", function (event) {
+    const data = event.data || {};
+
+    if (!data || data.type !== "SIM_GOOGLE_SSO_RESULT") return;
+
+    const iframe = document.getElementById("app");
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage(data, "*");
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js")
+        .then(function (registration) {
+          console.log("Service Worker aktif");
+
+          registration.update();
+
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+        })
+        .catch(function (err) {
+          console.error("Service Worker gagal:", err);
+        });
+    });
+  }
+
+  loadApp(false);
+</script>
 </body>
 </html>
