@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Download SIM AL-QUR'AN IBS RIAU</title>
+
+  <meta name="theme-color" content="#15803d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SIM AL-QUR'AN IBS" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icon-192.png" />
+  <link rel="apple-touch-icon" href="../icon-192.png" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0b3d2c, #15803d);
+      color: #fff;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .install-card {
+      width: 100%;
+      max-width: 430px;
+      text-align: center;
+      padding: 28px 24px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 18px;
+      border-radius: 24px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    }
+
+    .logo img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 25px;
+      line-height: 1.25;
+    }
+
+    p {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 15px;
+      opacity: 0.95;
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-install {
+      background: #ffffff;
+      color: #14532d;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+
+    .btn-open {
+      background: #f59e0b;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+
+    .btn-wa {
+      background: #25d366;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .info-box {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.10);
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .small {
+      margin-top: 14px;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="install-card">
+    <div class="logo">
+      <img src="../icon-192.png" alt="Logo SIM AL-QUR'AN IBS" />
+    </div>
+
+    <h1>Instal SIM AL-QUR'AN IBS RIAU</h1>
+
+    <p>
+      Gunakan aplikasi ini langsung dari layar utama HP agar lebih mudah,
+      cepat, dan tampil seperti aplikasi Android.
+    </p>
+
+    <button id="installBtn" class="btn btn-install hidden">
+      Instal Aplikasi
+    </button>
+
+    <a id="openBtn" class="btn btn-open" href="../">
+      Buka Aplikasi
+    </a>
+
+    <a
+      class="btn btn-wa"
+      href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
+      target="_blank"
+      rel="noopener noreferrer">
+      Bantuan WhatsApp
+    </a>
+
+    <div id="androidGuide" class="info-box hidden">
+      <strong>Panduan Instal Android / Chrome:</strong>
+      Jika tombol instal belum muncul, tekan menu titik tiga di browser,
+      lalu pilih <b>Tambahkan ke layar utama</b> atau <b>Install app</b>.
+    </div>
+
+    <div id="iosGuide" class="info-box hidden">
+      <strong>Panduan Instal iPhone / Safari:</strong>
+      Tekan tombol <b>Bagikan</b>, lalu pilih <b>Tambahkan ke Layar Utama</b>.
+    </div>
+
+    <p class="small">
+      Link halaman instal: /Download
+    </p>
+  </main>
+
+  <script>
+    let deferredPrompt = null;
+
+    const installBtn = document.getElementById("installBtn");
+    const openBtn = document.getElementById("openBtn");
+    const androidGuide = document.getElementById("androidGuide");
+    const iosGuide = document.getElementById("iosGuide");
+
+    function isStandaloneMode() {
+      return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    }
+
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    }
+
+    if (isStandaloneMode()) {
+      installBtn.classList.add("hidden");
+      androidGuide.classList.add("hidden");
+      iosGuide.classList.add("hidden");
+      openBtn.textContent = "Aplikasi Sudah Terpasang - Buka Aplikasi";
+    } else {
+      if (isIOS()) {
+        iosGuide.classList.remove("hidden");
+      } else {
+        androidGuide.classList.remove("hidden");
+      }
+    }
+
+    window.addEventListener("beforeinstallprompt", function (event) {
+      event.preventDefault();
+      deferredPrompt = event;
+
+      if (!isStandaloneMode()) {
+        installBtn.classList.remove("hidden");
+      }
+    });
+
+    installBtn.addEventListener("click", async function () {
+      if (!deferredPrompt) {
+        androidGuide.classList.remove("hidden");
+        return;
+      }
+
+      deferredPrompt.prompt();
+
+      const choiceResult = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.classList.add("hidden");
+
+      if (choiceResult.outcome === "accepted") {
+        openBtn.textContent = "Buka Aplikasi";
+      }
+    });
+
+    window.addEventListener("appinstalled", function () {
+      installBtn.classList.add("hidden");
+      openBtn.textContent = "Aplikasi Berhasil Diinstal - Buka Aplikasi";
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("../sw.js")
+          .then(function () {
+            console.log("Service Worker aktif dari halaman Download");
+          })
+          .catch(function (err) {
+            console.error("Service Worker gagal:", err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
