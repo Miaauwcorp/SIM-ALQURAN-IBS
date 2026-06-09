@@ -43,7 +43,7 @@
       background: #fff;
     }
 
-    #offline-page {
+    .status-page {
       display: none;
       width: 100%;
       height: 100vh;
@@ -58,8 +58,8 @@
       color: #fff;
     }
 
-    #offline-page .box {
-      max-width: 420px;
+    .status-page .box {
+      max-width: 430px;
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: 20px;
@@ -67,54 +67,143 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.2);
     }
 
-    #offline-page h1 {
+    .status-page h1 {
       margin: 0 0 10px;
       font-size: 24px;
     }
 
-    #offline-page p {
+    .status-page p {
       margin: 0;
       line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .retry-btn,
+    .wa-help {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: none;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+    }
+
+    .retry-btn {
+      background: #fff;
+      color: #14532d;
     }
 
     .wa-help {
-  display: inline-block;
-  margin-top: 18px;
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: #25d366;
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-}
+      background: #25d366;
+      color: #fff;
+    }
 
-.wa-help:active {
-  transform: scale(0.98);
-}
+    .retry-btn:active,
+    .wa-help:active {
+      transform: scale(0.98);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .small-text {
+      margin-top: 14px !important;
+      font-size: 13px !important;
+      opacity: 0.85;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 
 <body>
-  <div id="offline-page">
-  <div class="box">
-    <h1>SIM AL-QUR'AN IBS RIAU</h1>
-    <p>
-      Aplikasi sedang offline atau koneksi internet tidak tersedia.
-      Silakan periksa koneksi, lalu buka kembali aplikasi.
-    </p>
-
-    <a
-      class="wa-help"
-      href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
-      target="_blank"
-      rel="noopener noreferrer">
-      Tombol Bantuan
-    </a>
+  <!-- Loading -->
+  <div id="loading-page" class="status-page">
+    <div class="box">
+      <div class="spinner"></div>
+      <h1>Memuat Aplikasi</h1>
+      <p>Mohon tunggu, SIM AL-QUR'AN IBS RIAU sedang dibuka.</p>
+      <p class="small-text">Pastikan koneksi internet stabil.</p>
+    </div>
   </div>
-</div>
 
+  <!-- Offline -->
+  <div id="offline-page" class="status-page">
+    <div class="box">
+      <h1>SIM AL-QUR'AN IBS RIAU</h1>
+      <p>
+        Aplikasi sedang offline atau koneksi internet tidak tersedia.
+        Silakan periksa koneksi, lalu coba buka kembali aplikasi.
+      </p>
+
+      <div class="actions">
+        <button type="button" class="retry-btn" onclick="retryApp()">
+          Coba Lagi
+        </button>
+
+        <a
+          class="wa-help"
+          href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
+          target="_blank"
+          rel="noopener noreferrer">
+          Bantuan WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server bermasalah -->
+  <div id="server-page" class="status-page">
+    <div class="box">
+      <h1>Server Sedang Lambat</h1>
+      <p>
+        Aplikasi belum berhasil terhubung ke server SIM AL-QUR'AN IBS RIAU.
+        Silakan coba lagi. Jika masih gagal, hubungi admin melalui WhatsApp.
+      </p>
+
+      <div class="actions">
+        <button type="button" class="retry-btn" onclick="retryApp()">
+          Coba Lagi
+        </button>
+
+        <a
+          class="wa-help"
+          href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
+          target="_blank"
+          rel="noopener noreferrer">
+          Bantuan WhatsApp
+        </a>
+      </div>
+
+      <p class="small-text">
+        Jika internet aktif tetapi aplikasi tetap tidak terbuka, kemungkinan server sedang mengalami gangguan.
+      </p>
+    </div>
+  </div>
+
+  <!-- Aplikasi utama -->
   <div class="iframe-container" id="iframe-container">
     <iframe
       id="app"
@@ -130,7 +219,13 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
-    function buildIframeUrl() {
+    // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
+    const LOAD_TIMEOUT_MS = 15000;
+
+    let loadTimer = null;
+    let iframeLoaded = false;
+
+    function buildIframeUrl(forceReload = false) {
       const currentParams = new URLSearchParams(window.location.search);
       const iframeParams = new URLSearchParams();
 
@@ -140,37 +235,108 @@
       if (page) iframeParams.set("page", page);
       if (nama) iframeParams.set("nama", nama);
 
+      // Dipakai saat tombol Coba Lagi ditekan agar iframe benar-benar memuat ulang
+      if (forceReload) {
+        iframeParams.set("_reload", Date.now().toString());
+      }
+
       const query = iframeParams.toString();
       return query ? `${GAS_URL}?${query}` : GAS_URL;
     }
 
-    function loadApp() {
+    function setView(view) {
+      const loadingPage = document.getElementById("loading-page");
+      const offlinePage = document.getElementById("offline-page");
+      const serverPage = document.getElementById("server-page");
+      const iframeContainer = document.getElementById("iframe-container");
+
+      loadingPage.style.display = view === "loading" ? "flex" : "none";
+      offlinePage.style.display = view === "offline" ? "flex" : "none";
+      serverPage.style.display = view === "server" ? "flex" : "none";
+      iframeContainer.style.display = view === "app" ? "block" : "none";
+    }
+
+    function clearLoadTimer() {
+      if (loadTimer) {
+        clearTimeout(loadTimer);
+        loadTimer = null;
+      }
+    }
+
+    function startLoadTimer() {
+      clearLoadTimer();
+
+      loadTimer = setTimeout(function () {
+        if (!iframeLoaded && navigator.onLine) {
+          setView("server");
+        }
+      }, LOAD_TIMEOUT_MS);
+    }
+
+    function loadApp(forceReload = false) {
       const iframe = document.getElementById("app");
-      iframe.src = buildIframeUrl();
+
+      if (!navigator.onLine) {
+        clearLoadTimer();
+        setView("offline");
+        return;
+      }
+
+      iframeLoaded = false;
+      setView("loading");
+      startLoadTimer();
+
+      iframe.src = buildIframeUrl(forceReload);
+    }
+
+    function retryApp() {
+      if (!navigator.onLine) {
+        setView("offline");
+        return;
+      }
+
+      loadApp(true);
     }
 
     function showOfflineIfNeeded() {
-      const offlinePage = document.getElementById("offline-page");
-      const iframeContainer = document.getElementById("iframe-container");
-
       if (!navigator.onLine) {
-        offlinePage.style.display = "flex";
-        iframeContainer.style.display = "none";
-      } else {
-        offlinePage.style.display = "none";
-        iframeContainer.style.display = "block";
+        clearLoadTimer();
+        setView("offline");
       }
     }
+
+    const iframe = document.getElementById("app");
+
+    iframe.addEventListener("load", function () {
+      const src = iframe.getAttribute("src") || "";
+
+      if (!src || src === "about:blank") return;
+
+      iframeLoaded = true;
+      clearLoadTimer();
+      setView("app");
+    });
+
+    iframe.addEventListener("error", function () {
+      if (navigator.onLine) {
+        clearLoadTimer();
+        setView("server");
+      } else {
+        clearLoadTimer();
+        setView("offline");
+      }
+    });
 
     loadApp();
     showOfflineIfNeeded();
 
     window.addEventListener("online", function () {
-      showOfflineIfNeeded();
-      loadApp();
+      loadApp(true);
     });
 
-    window.addEventListener("offline", showOfflineIfNeeded);
+    window.addEventListener("offline", function () {
+      showOfflineIfNeeded();
+    });
 
     window.addEventListener("message", function (event) {
       const data = event.data || {};
