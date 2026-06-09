@@ -1,53 +1,66 @@
-const CACHE_NAME = "sim-murojaah-ibs-v2";
-
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png"
-];
-
-self.addEventListener("install", function (event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(APP_SHELL);
-    })
-  );
-
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", function (event) {
-  event.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys
-          .filter(function (key) {
-            return key !== CACHE_NAME;
-          })
-          .map(function (key) {
-            return caches.delete(key);
-          })
-      );
-    })
-  );
-
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", function (event) {
-  const request = event.request;
-
-  if (request.method !== "GET") return;
-
-  event.respondWith(
-    caches.match(request).then(function (cached) {
-      return cached || fetch(request).catch(function () {
-        if (request.mode === "navigate") {
-          return caches.match("./index.html");
+{
+  "name": "SIM AL-QUR'AN IBS RIAU",
+  "short_name": "SIM AL-QUR'AN IBS",
+  "description": "Aplikasi SIM Murojaah IBS Riau",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b3d2c",
+  "theme_color": "#15803d",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Input Murojaah",
+      "short_name": "Input",
+      "description": "Buka halaman input murojaah",
+      "url": "./?page=input",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
-      });
-    })
-  );
-});
+      ]
+    },
+    {
+      "name": "Rekap Murojaah",
+      "short_name": "Rekap",
+      "description": "Buka halaman rekap murojaah",
+      "url": "./?page=rekap",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Data Santri",
+      "short_name": "Santri",
+      "description": "Buka halaman data santri",
+      "url": "./?page=santri",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
