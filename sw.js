@@ -1,4 +1,10 @@
-const CACHE_NAME = "sim-murojaah-ibs-v4";
+const CACHE_NAME = "sim-murojaah-ibs-v5";
+
+self.addEventListener("message", function (event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
 
 const APP_SHELL = [
   "./",
