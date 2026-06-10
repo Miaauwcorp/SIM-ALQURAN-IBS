@@ -224,8 +224,11 @@
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
     const LOAD_TIMEOUT_MS = 15000;
 
-    let loadTimer = null;
-    let iframeLoaded = false;
+   let loadTimer = null;
+let iframeLoaded = false;
+let currentView = "loading";
+
+const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     function buildIframeUrl(forceReload = false) {
       const currentParams = new URLSearchParams(window.location.search);
@@ -246,17 +249,19 @@
       return query ? `${GAS_URL}?${query}` : GAS_URL;
     }
 
-    function setView(view) {
-      const loadingPage = document.getElementById("loading-page");
-      const offlinePage = document.getElementById("offline-page");
-      const serverPage = document.getElementById("server-page");
-      const iframeContainer = document.getElementById("iframe-container");
+  function setView(view) {
+  currentView = view;
 
-      loadingPage.style.display = view === "loading" ? "flex" : "none";
-      offlinePage.style.display = view === "offline" ? "flex" : "none";
-      serverPage.style.display = view === "server" ? "flex" : "none";
-      iframeContainer.style.display = view === "app" ? "block" : "none";
-    }
+  const loadingPage = document.getElementById("loading-page");
+  const offlinePage = document.getElementById("offline-page");
+  const serverPage = document.getElementById("server-page");
+  const iframeContainer = document.getElementById("iframe-container");
+
+  loadingPage.style.display = view === "loading" ? "flex" : "none";
+  offlinePage.style.display = view === "offline" ? "flex" : "none";
+  serverPage.style.display = view === "server" ? "flex" : "none";
+  iframeContainer.style.display = view === "app" ? "block" : "none";
+}
 
     function clearLoadTimer() {
       if (loadTimer) {
@@ -276,20 +281,30 @@
     }
 
     function loadApp(forceReload = false) {
-      const iframe = document.getElementById("app");
+  const iframe = document.getElementById("app");
 
-      if (!navigator.onLine) {
-        clearLoadTimer();
-        setView("offline");
-        return;
-      }
+  if (!navigator.onLine) {
+    clearLoadTimer();
+    setView("offline");
+    return;
+  }
 
-      iframeLoaded = false;
-      setView("loading");
-      startLoadTimer();
+  const hasOpenedBefore = localStorage.getItem(HAS_OPENED_KEY) === "1";
 
-      iframe.src = buildIframeUrl(forceReload);
-    }
+  iframeLoaded = false;
+
+  // Kalau aplikasi pernah berhasil terbuka sebelumnya,
+  // langsung tampilkan iframe, jangan tampilkan halaman loading penuh.
+  if (hasOpenedBefore) {
+    setView("app");
+  } else {
+    setView("loading");
+  }
+
+  startLoadTimer();
+
+  iframe.src = buildIframeUrl(forceReload);
+}
 
     function retryApp() {
       if (!navigator.onLine) {
@@ -310,14 +325,18 @@
     const iframe = document.getElementById("app");
 
     iframe.addEventListener("load", function () {
-      const src = iframe.getAttribute("src") || "";
+  const src = iframe.getAttribute("src") || "";
 
-      if (!src || src === "about:blank") return;
+  if (!src || src === "about:blank") return;
 
-      iframeLoaded = true;
-      clearLoadTimer();
-      setView("app");
-    });
+  iframeLoaded = true;
+
+  // Simpan tanda bahwa aplikasi sudah pernah berhasil terbuka
+  localStorage.setItem(HAS_OPENED_KEY, "1");
+
+  clearLoadTimer();
+  setView("app");
+});
 
     iframe.addEventListener("error", function () {
       if (navigator.onLine) {
@@ -332,9 +351,13 @@
     loadApp();
     showOfflineIfNeeded();
 
-    window.addEventListener("online", function () {
-      loadApp(true);
-    });
+   window.addEventListener("online", function () {
+  // Reload hanya kalau sebelumnya memang offline/server,
+  // bukan setiap koneksi online terdeteksi ulang.
+  if (currentView === "offline" || currentView === "server") {
+    loadApp(true);
+  }
+});
 
     window.addEventListener("offline", function () {
       showOfflineIfNeeded();
