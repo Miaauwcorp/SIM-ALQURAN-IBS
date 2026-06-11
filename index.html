@@ -230,24 +230,27 @@ let currentView = "loading";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
-    function buildIframeUrl(forceReload = false) {
-      const currentParams = new URLSearchParams(window.location.search);
-      const iframeParams = new URLSearchParams();
+   function buildIframeUrl(forceReload = false) {
+  const currentParams = new URLSearchParams(window.location.search);
+  const iframeParams = new URLSearchParams();
 
-      const page = currentParams.get("page") || "";
-      const nama = currentParams.get("nama") || "";
+  const page = currentParams.get("page") || "";
+  const nama = currentParams.get("nama") || "";
+  const raporToken = currentParams.get("raporToken") || "";
 
-      if (page) iframeParams.set("page", page);
-      if (nama) iframeParams.set("nama", nama);
+  if (page) iframeParams.set("page", page);
+  if (nama) iframeParams.set("nama", nama);
 
-      // Dipakai saat tombol Coba Lagi ditekan agar iframe benar-benar memuat ulang
-      if (forceReload) {
-        iframeParams.set("_reload", Date.now().toString());
-      }
+  // Penting untuk Link Wali
+  if (raporToken) iframeParams.set("raporToken", raporToken);
 
-      const query = iframeParams.toString();
-      return query ? `${GAS_URL}?${query}` : GAS_URL;
-    }
+  if (forceReload) {
+    iframeParams.set("_reload", Date.now().toString());
+  }
+
+  const query = iframeParams.toString();
+  return query ? `${GAS_URL}?${query}` : GAS_URL;
+}
 
   function setView(view) {
   currentView = view;
