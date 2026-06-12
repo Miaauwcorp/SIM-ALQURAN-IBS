@@ -234,11 +234,12 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   const currentParams = new URLSearchParams(window.location.search);
   const iframeParams = new URLSearchParams();
 
+  iframeParams.set("source", "pwa");
+
   const page = currentParams.get("page") || "";
   const nama = currentParams.get("nama") || "";
   const raporToken = currentParams.get("raporToken") || "";
   const laporanToken = currentParams.get("laporanToken") || "";
-  const source = currentParams.get("source") || "";
 
   if (page) iframeParams.set("page", page);
   if (nama) iframeParams.set("nama", nama);
@@ -246,7 +247,6 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   // Penting untuk Link Wali
   if (raporToken) iframeParams.set("raporToken", raporToken);
   if (laporanToken) iframeParams.set("laporanToken", laporanToken);
-  if (source) iframeParams.set("source", source);
 
   if (forceReload) {
     iframeParams.set("_reload", Date.now().toString());
