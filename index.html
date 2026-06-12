@@ -376,6 +376,80 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
       showOfflineIfNeeded();
     });
 
+    function simRunWithTopFrameGesture(label, runner) {
+  return new Promise(function (resolve, reject) {
+    const overlay = document.createElement("div");
+
+    overlay.style.cssText =
+      "position:fixed;" +
+      "inset:0;" +
+      "z-index:999999;" +
+      "display:flex;" +
+      "align-items:center;" +
+      "justify-content:center;" +
+      "background:rgba(0,0,0,.55);" +
+      "padding:24px;" +
+      "box-sizing:border-box;";
+
+    overlay.innerHTML =
+      '<div style="' +
+        'width:min(360px,100%);' +
+        'background:#ffffff;' +
+        'border-radius:22px;' +
+        'padding:22px;' +
+        'text-align:center;' +
+        'font-family:Arial,sans-serif;' +
+        'box-shadow:0 18px 45px rgba(0,0,0,.25);' +
+      '">' +
+        '<div style="font-size:42px;margin-bottom:10px;">🔐</div>' +
+        '<h3 style="margin:0 0 8px;color:#14532d;">Verifikasi Biometrik</h3>' +
+        '<p style="margin:0 0 18px;color:#475569;line-height:1.5;font-size:14px;">' +
+          'Tekan tombol di bawah untuk melanjutkan fingerprint / Samsung Pass.' +
+        '</p>' +
+        '<button id="sim-passkey-continue" style="' +
+          'border:0;' +
+          'border-radius:16px;' +
+          'padding:14px 18px;' +
+          'font-weight:800;' +
+          'font-size:15px;' +
+          'background:#15803d;' +
+          'color:white;' +
+          'width:100%;' +
+        '">' +
+          (label || "Lanjutkan biometrik") +
+        '</button>' +
+        '<button id="sim-passkey-cancel" style="' +
+          'margin-top:10px;' +
+          'border:0;' +
+          'background:transparent;' +
+          'color:#64748b;' +
+          'font-weight:700;' +
+        '">Batal</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    const continueBtn = overlay.querySelector("#sim-passkey-continue");
+    const cancelBtn = overlay.querySelector("#sim-passkey-cancel");
+
+    cancelBtn.addEventListener("click", function () {
+      overlay.remove();
+      reject(new DOMException("Biometrik dibatalkan.", "NotAllowedError"));
+    }, { once: true });
+
+    continueBtn.addEventListener("click", async function () {
+      try {
+        overlay.remove();
+        const result = await runner();
+        resolve(result);
+      } catch (err) {
+        overlay.remove();
+        reject(err);
+      }
+    }, { once: true });
+  });
+}
+
    function simBufferToBase64Url(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -493,9 +567,14 @@ window.addEventListener("message", async function (event) {
         throw new Error("Browser belum mendukung WebAuthn/passkey.");
       }
 
-      const credential = await navigator.credentials.create(
-        simPrepareCreateOptions(data.payload || {})
-      );
+     const credential = await simRunWithTopFrameGesture(
+  "Lanjutkan aktivasi biometrik",
+  function () {
+    return navigator.credentials.create(
+      simPrepareCreateOptions(data.payload || {})
+    );
+  }
+);
 
       simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_CREATE_RESULT",
@@ -523,9 +602,14 @@ window.addEventListener("message", async function (event) {
         throw new Error("Browser belum mendukung WebAuthn/passkey.");
       }
 
-      const credential = await navigator.credentials.get(
-        simPrepareGetOptions(data.payload || {})
-      );
+    const credential = await simRunWithTopFrameGesture(
+  "Lanjutkan login biometrik",
+  function () {
+    return navigator.credentials.get(
+      simPrepareGetOptions(data.payload || {})
+    );
+  }
+);
 
       simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_GET_RESULT",
