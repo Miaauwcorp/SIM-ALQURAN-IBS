@@ -1,4 +1,4 @@
-const CACHE_NAME = "sim-murojaah-ibs-v6";
+const CACHE_NAME = "sim-murojaah-ibs-v7";
 
 const APP_SHELL = [
   "./",
