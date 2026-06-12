@@ -237,12 +237,14 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   const page = currentParams.get("page") || "";
   const nama = currentParams.get("nama") || "";
   const raporToken = currentParams.get("raporToken") || "";
+  const laporanToken = currentParams.get("laporanToken") || "";
 
   if (page) iframeParams.set("page", page);
   if (nama) iframeParams.set("nama", nama);
 
   // Penting untuk Link Wali
   if (raporToken) iframeParams.set("raporToken", raporToken);
+  if (laporanToken) iframeParams.set("laporanToken", laporanToken);
 
   if (forceReload) {
     iframeParams.set("_reload", Date.now().toString());
