@@ -497,20 +497,20 @@ window.addEventListener("message", async function (event) {
         simPrepareCreateOptions(data.payload || {})
       );
 
-      iframe.contentWindow.postMessage({
+      simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_CREATE_RESULT",
         requestId: data.requestId || "",
         success: true,
         credential: simSerializeCredential(credential)
-      }, "*");
+      });
     } catch (err) {
-      iframe.contentWindow.postMessage({
+      simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_CREATE_RESULT",
         requestId: data.requestId || "",
         success: false,
         errorName: err && err.name ? err.name : "Error",
         errorMessage: err && err.message ? err.message : String(err)
-      }, "*");
+      });
     }
 
     return;
@@ -527,20 +527,20 @@ window.addEventListener("message", async function (event) {
         simPrepareGetOptions(data.payload || {})
       );
 
-      iframe.contentWindow.postMessage({
+      simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_GET_RESULT",
         requestId: data.requestId || "",
         success: true,
         credential: simSerializeCredential(credential)
-      }, "*");
+      });
     } catch (err) {
-      iframe.contentWindow.postMessage({
+      simReplyToPasskeyRequester(event, {
         type: "SIM_PASSKEY_GET_RESULT",
         requestId: data.requestId || "",
         success: false,
         errorName: err && err.name ? err.name : "Error",
         errorMessage: err && err.message ? err.message : String(err)
-      }, "*");
+      });
     }
 
     return;
@@ -558,6 +558,21 @@ window.addEventListener("message", async function (event) {
           });
       });
     }
+
+    function simReplyToPasskeyRequester(event, payload) {
+  const iframe = document.getElementById("app");
+  const target =
+    event && event.source
+      ? event.source
+      : (iframe && iframe.contentWindow ? iframe.contentWindow : null);
+
+  if (!target || typeof target.postMessage !== "function") {
+    console.warn("Target balasan passkey tidak ditemukan:", payload);
+    return;
+  }
+
+  target.postMessage(payload, "*");
+}
   </script>
 </body>
 </html>
