@@ -207,14 +207,14 @@
 
   <!-- Aplikasi utama -->
   <div class="iframe-container" id="iframe-container">
-   <iframe
+  <iframe
   id="app"
   title="SIM MUROJAAH IBS RIAU"
   scrolling="yes"
   allowfullscreen="true"
   webkitallowfullscreen="true"
   mozallowfullscreen="true"
-  allow="fullscreen; camera; microphone; display-capture; geolocation; publickey-credentials-get; publickey-credentials-create;">
+  allow="fullscreen *; camera *; microphone *; display-capture *; geolocation *; publickey-credentials-create *; publickey-credentials-get *;">
 </iframe>
   </div>
 
@@ -310,6 +310,11 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   }
 
   startLoadTimer();
+
+      iframe.setAttribute(
+  "allow",
+  "fullscreen *; camera *; microphone *; display-capture *; geolocation *; publickey-credentials-create *; publickey-credentials-get *;"
+);
 
   iframe.src = buildIframeUrl(forceReload);
 }
