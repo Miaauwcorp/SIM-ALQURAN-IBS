@@ -214,7 +214,7 @@
       allowfullscreen="true"
       webkitallowfullscreen="true"
       mozallowfullscreen="true"
-      allow="fullscreen; camera; microphone; display-capture; geolocation;">
+      allow="fullscreen; camera; microphone; display-capture; geolocation; publickey-credentials-get *; publickey-credentials-create *;">
     </iframe>
   </div>
 
@@ -238,6 +238,7 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   const nama = currentParams.get("nama") || "";
   const raporToken = currentParams.get("raporToken") || "";
   const laporanToken = currentParams.get("laporanToken") || "";
+  const source = currentParams.get("source") || "";
 
   if (page) iframeParams.set("page", page);
   if (nama) iframeParams.set("nama", nama);
@@ -245,6 +246,7 @@ const HAS_OPENED_KEY = "sim_murojaah_has_opened";
   // Penting untuk Link Wali
   if (raporToken) iframeParams.set("raporToken", raporToken);
   if (laporanToken) iframeParams.set("laporanToken", laporanToken);
+  if (source) iframeParams.set("source", source);
 
   if (forceReload) {
     iframeParams.set("_reload", Date.now().toString());
