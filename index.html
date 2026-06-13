@@ -560,75 +560,83 @@ window.addEventListener("message", async function (event) {
     return;
   }
 
-  // Daftar passkey / biometrik
-  if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
-    try {
-      if (!window.PublicKeyCredential || !navigator.credentials) {
-        throw new Error("Browser belum mendukung WebAuthn/passkey.");
-      }
+ // Daftar passkey / biometrik
+if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
+  try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      throw new Error("Browser belum mendukung WebAuthn/passkey.");
+    }
 
-     const credential = await simRunWithTopFrameGesture(
-  "Lanjutkan aktivasi biometrik",
-  function () {
-    return navigator.credentials.create(
+    if (
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+    ) {
+      throw new Error(
+        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
+      );
+    }
+
+    const credential = await navigator.credentials.create(
       simPrepareCreateOptions(data.payload || {})
     );
-  }
-);
 
-      simReplyToPasskeyRequester(event, {
-        type: "SIM_PASSKEY_CREATE_RESULT",
-        requestId: data.requestId || "",
-        success: true,
-        credential: simSerializeCredential(credential)
-      });
-    } catch (err) {
-      simReplyToPasskeyRequester(event, {
-        type: "SIM_PASSKEY_CREATE_RESULT",
-        requestId: data.requestId || "",
-        success: false,
-        errorName: err && err.name ? err.name : "Error",
-        errorMessage: err && err.message ? err.message : String(err)
-      });
-    }
-
-    return;
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_CREATE_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      credential: simSerializeCredential(credential)
+    });
+  } catch (err) {
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_CREATE_RESULT",
+      requestId: data.requestId || "",
+      success: false,
+      errorName: err && err.name ? err.name : "Error",
+      errorMessage: err && err.message ? err.message : String(err)
+    });
   }
+
+  return;
+}
 
   // Login passkey / biometrik
-  if (data.type === "SIM_PASSKEY_GET_REQUEST") {
-    try {
-      if (!window.PublicKeyCredential || !navigator.credentials) {
-        throw new Error("Browser belum mendukung WebAuthn/passkey.");
-      }
-
-    const credential = await simRunWithTopFrameGesture(
-  "Lanjutkan login biometrik",
-  function () {
-    return navigator.credentials.get(
-      simPrepareGetOptions(data.payload || {})
-    );
-  }
-);
-
-      simReplyToPasskeyRequester(event, {
-        type: "SIM_PASSKEY_GET_RESULT",
-        requestId: data.requestId || "",
-        success: true,
-        credential: simSerializeCredential(credential)
-      });
-    } catch (err) {
-      simReplyToPasskeyRequester(event, {
-        type: "SIM_PASSKEY_GET_RESULT",
-        requestId: data.requestId || "",
-        success: false,
-        errorName: err && err.name ? err.name : "Error",
-        errorMessage: err && err.message ? err.message : String(err)
-      });
+if (data.type === "SIM_PASSKEY_GET_REQUEST") {
+  try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      throw new Error("Browser belum mendukung WebAuthn/passkey.");
     }
 
-    return;
+    if (
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+    ) {
+      throw new Error(
+        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
+      );
+    }
+
+    const credential = await navigator.credentials.get(
+      simPrepareGetOptions(data.payload || {})
+    );
+
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      credential: simSerializeCredential(credential)
+    });
+  } catch (err) {
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: false,
+      errorName: err && err.name ? err.name : "Error",
+      errorMessage: err && err.message ? err.message : String(err)
+    });
   }
+
+  return;
+}
 });
 
     if ("serviceWorker" in navigator) {
