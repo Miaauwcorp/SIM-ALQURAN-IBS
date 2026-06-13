@@ -599,7 +599,7 @@ if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
   return;
 }
 
-  // Login passkey / biometrik
+ // Login passkey / biometrik
 if (data.type === "SIM_PASSKEY_GET_REQUEST") {
   try {
     if (!window.PublicKeyCredential || !navigator.credentials) {
