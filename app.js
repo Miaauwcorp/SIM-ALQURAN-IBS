@@ -398,6 +398,54 @@ function shouldShowFcmPromptEveryOpen() {
   return Notification.permission === "default";
 }
 
+function openNotificationSettingsBestEffort() {
+  /*
+    Browser/PWA tidak selalu boleh membuka pengaturan notifikasi secara langsung.
+    Kode ini mencoba beberapa jalur umum di Android/Chrome.
+    Jika gagal, user tetap diberi panduan manual.
+  */
+
+  const isAndroid = /Android/i.test(navigator.userAgent || "");
+
+  if (isAndroid) {
+    try {
+      // Percobaan membuka pengaturan notifikasi Android.
+      window.location.href =
+        "intent://settings/#Intent;action=android.settings.APP_NOTIFICATION_SETTINGS;end";
+      return;
+    } catch (err) {
+      console.warn("Gagal membuka Android notification settings:", err);
+    }
+
+    try {
+      // Fallback ke pengaturan aplikasi Android.
+      window.location.href =
+        "intent://settings/#Intent;action=android.settings.APPLICATION_SETTINGS;end";
+      return;
+    } catch (err) {
+      console.warn("Gagal membuka Android app settings:", err);
+    }
+  }
+
+  showFcmSettingsGuide();
+}
+
+function showFcmSettingsGuide() {
+  const help = document.getElementById("sim-fcm-denied-help");
+  if (help) {
+    help.style.display = "block";
+  }
+
+  alert(
+    "Jika pengaturan tidak terbuka otomatis, buka manual:\n\n" +
+    "1. Tekan dan tahan ikon aplikasi SIM Murojaah.\n" +
+    "2. Pilih Info Aplikasi / App Info.\n" +
+    "3. Buka Notifikasi / Notifications.\n" +
+    "4. Aktifkan izin notifikasi.\n" +
+    "5. Tutup lalu buka ulang aplikasi."
+  );
+}
+
 function showFcmDeniedInstructionOverlay() {
   removeFcmPromptOverlay();
 
@@ -446,10 +494,10 @@ function showFcmDeniedInstructionOverlay() {
 
       <p style="margin: 0 0 18px; color: #4b5563; line-height: 1.6; font-size: 15px;">
         Izin notifikasi untuk aplikasi ini sedang diblokir.
-        Tekan tombol di bawah untuk mencoba mengaktifkan kembali.
+        Buka pengaturan notifikasi, lalu ubah izin menjadi Allow/Izinkan.
       </p>
 
-      <button id="sim-fcm-retry-permission-btn" type="button" style="
+      <button id="sim-fcm-open-settings-btn" type="button" style="
         width: 100%;
         border: 0;
         border-radius: 999px;
@@ -460,10 +508,25 @@ function showFcmDeniedInstructionOverlay() {
         font-size: 15px;
         cursor: pointer;
       ">
-        Aktifkan Notifikasi
+        Buka Pengaturan Notifikasi
       </button>
 
-      <button id="sim-fcm-open-guide-btn" type="button" style="
+      <button id="sim-fcm-check-again-btn" type="button" style="
+        margin-top: 10px;
+        width: 100%;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        background: #ecfdf5;
+        color: #166534;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      ">
+        Saya Sudah Mengaktifkan
+      </button>
+
+      <button id="sim-fcm-guide-btn" type="button" style="
         margin-top: 10px;
         width: 100%;
         border: 0;
@@ -475,7 +538,7 @@ function showFcmDeniedInstructionOverlay() {
         font-size: 14px;
         cursor: pointer;
       ">
-        Cara Membuka Blokir
+        Lihat Panduan Manual
       </button>
 
       <button id="sim-fcm-denied-close-btn" type="button" style="
@@ -504,85 +567,64 @@ function showFcmDeniedInstructionOverlay() {
         font-size: 14px;
         line-height: 1.6;
       ">
-        <b>Jika tetap diblokir:</b><br>
-        1. Buka pengaturan browser atau aplikasi.<br>
-        2. Cari menu Izin / Permissions.<br>
-        3. Pilih Notifikasi / Notifications.<br>
-        4. Ubah izin aplikasi ini menjadi Allow / Izinkan.<br>
-        5. Tutup lalu buka ulang aplikasi.
+        <b>Cara membuka blokir notifikasi:</b><br>
+        1. Tekan dan tahan ikon aplikasi SIM Murojaah di layar HP.<br>
+        2. Pilih <b>Info Aplikasi</b> / <b>App Info</b>.<br>
+        3. Masuk ke <b>Notifikasi</b> / <b>Notifications</b>.<br>
+        4. Aktifkan izin notifikasi.<br>
+        5. Tutup aplikasi, lalu buka kembali.
       </div>
     </div>
   `;
 
   document.body.appendChild(overlay);
 
-  document.getElementById("sim-fcm-retry-permission-btn").addEventListener("click", async function () {
+  document.getElementById("sim-fcm-open-settings-btn").addEventListener("click", function () {
+    openNotificationSettingsBestEffort();
+  });
+
+  document.getElementById("sim-fcm-guide-btn").addEventListener("click", function () {
+    const help = document.getElementById("sim-fcm-denied-help");
+    if (help) {
+      help.style.display = help.style.display === "none" ? "block" : "none";
+    }
+  });
+
+  document.getElementById("sim-fcm-check-again-btn").addEventListener("click", async function () {
     const btn = this;
     btn.disabled = true;
-    btn.textContent = "Memeriksa izin...";
+    btn.textContent = "Memeriksa...";
 
     try {
       if (!("Notification" in window)) {
         alert("Browser ini belum mendukung notifikasi.");
         btn.disabled = false;
-        btn.textContent = "Aktifkan Notifikasi";
+        btn.textContent = "Saya Sudah Mengaktifkan";
         return;
       }
 
-      /*
-        Jika status masih denied, sebagian besar browser tidak akan menampilkan
-        popup izin lagi. Namun kita tetap coba, karena jika user sudah mengubah
-        izin dari pengaturan, status bisa berubah.
-      */
-      const permission = await Notification.requestPermission();
-
-      if (permission === "granted") {
-        btn.textContent = "Mengaktifkan token...";
-
+      if (Notification.permission === "granted") {
         const result = await enablePushNotification(lastFcmRequestPayload || {});
 
         if (result.success) {
           removeFcmPromptOverlay();
-
-          const iframe = document.getElementById("app");
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-              type: "SIM_FCM_ENABLE_RESULT",
-              success: true,
-              token: result.token
-            }, "*");
-          }
-
           alert("Notifikasi berhasil diaktifkan.");
           return;
         }
 
         alert(result.message || "Token notifikasi gagal dibuat.");
-        btn.disabled = false;
-        btn.textContent = "Aktifkan Notifikasi";
-        return;
+      } else if (Notification.permission === "denied") {
+        showFcmSettingsGuide();
+      } else {
+        removeFcmPromptOverlay();
+        showFcmPromptOverlay(lastFcmRequestPayload || {});
       }
-
-      if (permission === "denied") {
-        document.getElementById("sim-fcm-denied-help").style.display = "block";
-        alert("Izin masih diblokir. Silakan buka pengaturan notifikasi browser/aplikasi, lalu ubah menjadi Izinkan.");
-        btn.disabled = false;
-        btn.textContent = "Coba Lagi Setelah Diizinkan";
-        return;
-      }
-
-      btn.disabled = false;
-      btn.textContent = "Aktifkan Notifikasi";
     } catch (err) {
       alert(err && err.message ? err.message : String(err));
-      btn.disabled = false;
-      btn.textContent = "Aktifkan Notifikasi";
     }
-  });
 
-  document.getElementById("sim-fcm-open-guide-btn").addEventListener("click", function () {
-    const help = document.getElementById("sim-fcm-denied-help");
-    help.style.display = help.style.display === "none" ? "block" : "none";
+    btn.disabled = false;
+    btn.textContent = "Saya Sudah Mengaktifkan";
   });
 
   document.getElementById("sim-fcm-denied-close-btn").addEventListener("click", function () {
