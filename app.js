@@ -296,10 +296,15 @@ function showFcmPromptOverlay(payload = {}) {
     }
   });
 
-  document.getElementById("sim-fcm-later-btn").addEventListener("click", function () {
-    localStorage.setItem("sim_fcm_permission_later", String(Date.now()));
-    removeFcmPromptOverlay();
-  });
+ document.getElementById("sim-fcm-later-btn").addEventListener("click", function () {
+  /*
+    Jangan pakai localStorage di sini.
+    Kalau pakai localStorage, popup tidak akan muncul lagi di pembukaan berikutnya.
+    Dengan sessionStorage, popup hanya tidak muncul ulang pada sesi buka aplikasi saat ini.
+  */
+  sessionStorage.setItem("sim_fcm_prompt_shown_this_open", "1");
+  removeFcmPromptOverlay();
+});
 }
 
 /*
@@ -379,20 +384,118 @@ window.addEventListener("appinstalled", function () {
   }, 800);
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-  setTimeout(function () {
-    const alreadyDone = localStorage.getItem("sim_fcm_permission_done") === "1";
-    const alreadyPrompted = localStorage.getItem("sim_fcm_first_prompt_seen") === "1";
+function shouldShowFcmPromptEveryOpen() {
+  if (!("Notification" in window)) return false;
 
-    if (
-      isStandalonePwa() &&
-      !alreadyDone &&
-      !alreadyPrompted &&
-      "Notification" in window &&
-      Notification.permission === "default"
-    ) {
-      localStorage.setItem("sim_fcm_first_prompt_seen", "1");
-      showFcmPromptOverlay();
+  // Kalau sudah granted, jangan tampilkan popup lagi.
+  if (Notification.permission === "granted") return false;
+
+  // Kalau user sudah memilih Block/Deny, browser tidak akan menampilkan prompt izin lagi.
+  // Nanti kita tampilkan popup instruksi khusus.
+  if (Notification.permission === "denied") return true;
+
+  // Kalau masih default, artinya belum pernah diberi izin.
+  return Notification.permission === "default";
+}
+
+function showFcmDeniedInstructionOverlay() {
+  removeFcmPromptOverlay();
+
+  const overlay = document.createElement("div");
+  overlay.id = "sim-fcm-permission-overlay";
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 22px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    ">
+      <div style="
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 14px;
+        border-radius: 18px;
+        background: #fee2e2;
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+      ">🔕</div>
+
+      <h2 style="margin: 0 0 10px; font-size: 22px;">
+        Notifikasi Diblokir
+      </h2>
+
+      <p style="margin: 0 0 18px; color: #4b5563; line-height: 1.6; font-size: 15px;">
+        Izin notifikasi untuk aplikasi ini sedang diblokir.
+        Untuk menerima notifikasi, buka pengaturan browser/situs,
+        lalu ubah izin notifikasi menjadi Allow/Izinkan.
+      </p>
+
+      <button id="sim-fcm-denied-ok-btn" type="button" style="
+        width: 100%;
+        border: 0;
+        border-radius: 999px;
+        padding: 13px 18px;
+        background: #15803d;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+      ">
+        Saya Mengerti
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById("sim-fcm-denied-ok-btn").addEventListener("click", function () {
+    removeFcmPromptOverlay();
+  });
+}
+
+function scheduleFcmPromptEveryOpen() {
+  setTimeout(function () {
+    if (!shouldShowFcmPromptEveryOpen()) return;
+
+    /*
+      Supaya popup tidak muncul berkali-kali dalam 1 sesi yang sama.
+      Tetapi kalau aplikasi ditutup lalu dibuka lagi, popup akan muncul lagi.
+    */
+    if (sessionStorage.getItem("sim_fcm_prompt_shown_this_open") === "1") return;
+
+    sessionStorage.setItem("sim_fcm_prompt_shown_this_open", "1");
+
+    if (Notification.permission === "denied") {
+      showFcmDeniedInstructionOverlay();
+      return;
     }
+
+    showFcmPromptOverlay();
   }, 1500);
+}
+
+document.addEventListener("DOMContentLoaded", scheduleFcmPromptEveryOpen);
+
+window.addEventListener("pageshow", function () {
+  scheduleFcmPromptEveryOpen();
 });
