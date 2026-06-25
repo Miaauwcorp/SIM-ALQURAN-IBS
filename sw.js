@@ -1,4 +1,4 @@
-const CACHE_NAME = "sim-murojaah-ibs-v9";
+const CACHE_NAME = "sim-murojaah-ibs-v10-fcm";
 
 const APP_SHELL = [
   "./",
@@ -49,7 +49,96 @@ self.addEventListener("fetch", function (event) {
         if (request.mode === "navigate") {
           return caches.match("./index.html");
         }
+
+        return Response.error();
       });
+    })
+  );
+});
+
+/* =========================
+   FCM BACKGROUND PUSH
+========================= */
+
+function safeJsonFromPush(event) {
+  try {
+    if (!event.data) return {};
+    return event.data.json();
+  } catch (err) {
+    return {};
+  }
+}
+
+self.addEventListener("push", function (event) {
+  const payload = safeJsonFromPush(event);
+
+  const data = payload.data || {};
+  const notification = payload.notification || {};
+
+  const title =
+    notification.title ||
+    data.title ||
+    "SIM Murojaah IBS";
+
+  const body =
+    notification.body ||
+    data.body ||
+    "Ada notifikasi baru.";
+
+  const url =
+    data.url ||
+    data.link ||
+    "./";
+
+  const icon =
+    data.icon ||
+    "./icon-192.png";
+
+  const badge =
+    data.badge ||
+    "./icon-192.png";
+
+  const options = {
+    body,
+    icon,
+    badge,
+    data: {
+      url
+    },
+    tag: data.tag || "sim-murojaah-notification",
+    renotify: true,
+    requireInteraction: data.requireInteraction === "true"
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
+
+  const targetUrl = event.notification?.data?.url || "./";
+
+  event.waitUntil(
+    clients.matchAll({
+      type: "window",
+      includeUncontrolled: true
+    }).then(function (clientList) {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.focus();
+          client.postMessage({
+            type: "SIM_NOTIFICATION_CLICK",
+            url: targetUrl
+          });
+          return;
+        }
+      }
+
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });
