@@ -177,6 +177,61 @@ export async function enablePushNotification(extraPayload = {}) {
   }
 }
 
+/*
+  Auto-register token jika user sebelumnya menolak,
+  lalu di kemudian hari mengaktifkan izin notifikasi dari pengaturan HP/browser.
+
+  Fungsi ini tidak meminta izin ulang.
+  Fungsi ini hanya berjalan kalau Notification.permission sudah "granted".
+*/
+async function autoRegisterFcmTokenIfPermissionGranted(extraPayload = {}) {
+  try {
+    if (!("Notification" in window)) return;
+
+    // Kalau masih default/denied, token tidak bisa dibuat.
+    if (Notification.permission !== "granted") return;
+
+    const supported = await isSupported();
+    if (!supported) return;
+
+    const swReg = await ensureServiceWorker();
+
+    messaging = getMessaging(app);
+
+    const token = await getToken(messaging, {
+      vapidKey: PUBLIC_VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+
+    if (!token) return;
+
+    const userPayload = getCurrentUserPayload(extraPayload);
+
+    /*
+      Penting:
+      Tetap kirim token ke GAS setiap aplikasi dibuka.
+      Ini aman karena backend saveFcmToken_ sudah upsert berdasarkan token.
+      Kalau token sebelumnya belum masuk sheet, dia akan masuk.
+      Kalau token sudah ada, data Last Seen akan diperbarui.
+    */
+    const saveResult = await sendTokenToGas(token, userPayload);
+
+    if (saveResult && saveResult.success) {
+      localStorage.setItem("sim_fcm_token", token);
+      localStorage.setItem("sim_user_id", userPayload.userId);
+      localStorage.setItem("sim_user_name", userPayload.name);
+      localStorage.setItem("sim_fcm_permission_done", "1");
+      localStorage.setItem("sim_fcm_registered_at", new Date().toISOString());
+
+      console.log("FCM token aktif dan tersimpan:", saveResult);
+    } else {
+      console.warn("FCM token gagal disimpan:", saveResult);
+    }
+  } catch (err) {
+    console.warn("Auto register FCM gagal:", err);
+  }
+}
+
 function removeFcmPromptOverlay() {
   const old = document.getElementById("sim-fcm-permission-overlay");
   if (old) old.remove();
@@ -591,41 +646,43 @@ function showFcmDeniedInstructionOverlay() {
   });
 
   document.getElementById("sim-fcm-check-again-btn").addEventListener("click", async function () {
-    const btn = this;
-    btn.disabled = true;
-    btn.textContent = "Memeriksa...";
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = "Memeriksa...";
 
-    try {
-      if (!("Notification" in window)) {
-        alert("Browser ini belum mendukung notifikasi.");
-        btn.disabled = false;
-        btn.textContent = "Saya Sudah Mengaktifkan";
+  try {
+    if (!("Notification" in window)) {
+      alert("Browser ini belum mendukung notifikasi.");
+      btn.disabled = false;
+      btn.textContent = "Saya Sudah Mengaktifkan";
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      await autoRegisterFcmTokenIfPermissionGranted(lastFcmRequestPayload || {});
+
+      const savedToken = localStorage.getItem("sim_fcm_token") || "";
+
+      if (savedToken) {
+        removeFcmPromptOverlay();
+        alert("Notifikasi berhasil diaktifkan dan token sudah terdaftar.");
         return;
       }
 
-      if (Notification.permission === "granted") {
-        const result = await enablePushNotification(lastFcmRequestPayload || {});
-
-        if (result.success) {
-          removeFcmPromptOverlay();
-          alert("Notifikasi berhasil diaktifkan.");
-          return;
-        }
-
-        alert(result.message || "Token notifikasi gagal dibuat.");
-      } else if (Notification.permission === "denied") {
-        showFcmSettingsGuide();
-      } else {
-        removeFcmPromptOverlay();
-        showFcmPromptOverlay(lastFcmRequestPayload || {});
-      }
-    } catch (err) {
-      alert(err && err.message ? err.message : String(err));
+      alert("Izin sudah aktif, tetapi token belum berhasil dibuat. Tutup dan buka ulang aplikasi.");
+    } else if (Notification.permission === "denied") {
+      showFcmSettingsGuide();
+    } else {
+      removeFcmPromptOverlay();
+      showFcmPromptOverlay(lastFcmRequestPayload || {});
     }
+  } catch (err) {
+    alert(err && err.message ? err.message : String(err));
+  }
 
-    btn.disabled = false;
-    btn.textContent = "Saya Sudah Mengaktifkan";
-  });
+  btn.disabled = false;
+  btn.textContent = "Saya Sudah Mengaktifkan";
+});
 
   document.getElementById("sim-fcm-denied-close-btn").addEventListener("click", function () {
     sessionStorage.setItem("sim_fcm_prompt_shown_this_open", "1");
@@ -634,13 +691,24 @@ function showFcmDeniedInstructionOverlay() {
 }
 
 function scheduleFcmPromptEveryOpen() {
-  setTimeout(function () {
-    if (!shouldShowFcmPromptEveryOpen()) return;
+  setTimeout(async function () {
+    if (!("Notification" in window)) return;
 
     /*
-      Supaya popup tidak muncul berkali-kali dalam 1 sesi yang sama.
-      Tetapi kalau aplikasi ditutup lalu dibuka lagi, popup akan muncul lagi.
+      Jika user sudah mengaktifkan notifikasi lewat pengaturan HP/browser,
+      langsung buat token dan simpan ke Google Sheets.
     */
+    if (Notification.permission === "granted") {
+      await autoRegisterFcmTokenIfPermissionGranted(lastFcmRequestPayload || {});
+      return;
+    }
+
+    /*
+      Jika masih denied, tampilkan popup info/pengaturan.
+      Jika masih default, tampilkan popup aktifkan notifikasi.
+    */
+    if (!shouldShowFcmPromptEveryOpen()) return;
+
     if (sessionStorage.getItem("sim_fcm_prompt_shown_this_open") === "1") return;
 
     sessionStorage.setItem("sim_fcm_prompt_shown_this_open", "1");
@@ -654,8 +722,24 @@ function scheduleFcmPromptEveryOpen() {
   }, 1500);
 }
 
-document.addEventListener("DOMContentLoaded", scheduleFcmPromptEveryOpen);
+document.addEventListener("DOMContentLoaded", function () {
+  scheduleFcmPromptEveryOpen();
+});
 
 window.addEventListener("pageshow", function () {
   scheduleFcmPromptEveryOpen();
+});
+
+/*
+  Saat user balik dari pengaturan HP/browser ke aplikasi,
+  sistem cek lagi apakah izin sudah berubah menjadi granted.
+*/
+window.addEventListener("focus", function () {
+  autoRegisterFcmTokenIfPermissionGranted(lastFcmRequestPayload || {});
+});
+
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") {
+    autoRegisterFcmTokenIfPermissionGranted(lastFcmRequestPayload || {});
+  }
 });
