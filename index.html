@@ -230,24 +230,23 @@ let currentView = "loading";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
-   function buildIframeUrl(forceReload = false) {
+function buildIframeUrl(forceReload = false) {
   const currentParams = new URLSearchParams(window.location.search);
   const iframeParams = new URLSearchParams();
 
-  iframeParams.set("source", "pwa");
+  // Teruskan SEMUA parameter dari URL luar ke iframe GAS.
+  // Ini mencegah page=detail-santri dan nama santri hilang saat buka tab baru.
+  currentParams.forEach(function (value, key) {
+    if (key && value != null && String(value).trim() !== '') {
+      iframeParams.set(key, value);
+    }
+  });
+
+  if (!iframeParams.has("source")) {
+    iframeParams.set("source", "pwa");
+  }
+
   iframeParams.set("bioV", "3");
-
-  const page = currentParams.get("page") || "";
-  const nama = currentParams.get("nama") || "";
-  const raporToken = currentParams.get("raporToken") || "";
-  const laporanToken = currentParams.get("laporanToken") || "";
-
-  if (page) iframeParams.set("page", page);
-  if (nama) iframeParams.set("nama", nama);
-
-  // Penting untuk Link Wali
-  if (raporToken) iframeParams.set("raporToken", raporToken);
-  if (laporanToken) iframeParams.set("laporanToken", laporanToken);
 
   if (forceReload) {
     iframeParams.set("_reload", Date.now().toString());
