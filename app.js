@@ -10,6 +10,9 @@ import {
    KONFIGURASI FIREBASE
 ========================= */
 
+const PWA_VERSION = window.SIM_PWA_VERSION || "20260627-v11";
+const PWA_ICON = "./icon-192-v11.png?v=" + encodeURIComponent(PWA_VERSION);
+
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
 const PUBLIC_VAPID_KEY = "BKmxbHoI8YyOj-sImQzpEQMBTBGbxEn8aP_gDvVo9YCtaGQi5moPe08MM422VwWRZumhJhIhsL7aXGQv0GsidDs";
@@ -70,7 +73,16 @@ async function ensureServiceWorker() {
   }
 
   if (!serviceWorkerRegistration) {
-    serviceWorkerRegistration = await navigator.serviceWorker.register("./sw.js");
+    serviceWorkerRegistration = await navigator.serviceWorker.register(
+      "./sw.js?v=" + encodeURIComponent(PWA_VERSION),
+      {
+        updateViaCache: "none"
+      }
+    );
+
+    serviceWorkerRegistration.update().catch(function (err) {
+      console.warn("Cek update Service Worker dari app.js gagal:", err);
+    });
   }
 
   return serviceWorkerRegistration;
@@ -396,11 +408,11 @@ async function installForegroundListener() {
         "./";
 
       if (Notification.permission === "granted") {
-        new Notification(title, {
-          body,
-          icon: "./icon-192.png",
-          data: { url }
-        });
+       new Notification(title, {
+  body,
+  icon: PWA_ICON,
+  data: { url }
+});
       }
     });
   } catch (err) {
