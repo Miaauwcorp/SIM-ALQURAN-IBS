@@ -137,6 +137,106 @@
         transform: rotate(360deg);
       }
     }
+
+    /* =========================
+   MODAL SARAN DOWNLOAD PWA
+========================= */
+
+.sim-pwa-install-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999998;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.sim-pwa-install-overlay[hidden] {
+  display: none !important;
+}
+
+.sim-pwa-install-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+  padding: 24px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.sim-pwa-install-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.sim-pwa-install-card h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  color: #14532d;
+}
+
+.sim-pwa-install-card p {
+  margin: 0 0 18px;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.sim-pwa-install-primary,
+.sim-pwa-install-secondary,
+.sim-pwa-install-close {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 18px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.sim-pwa-install-primary {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.sim-pwa-install-secondary {
+  margin-top: 10px;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.sim-pwa-install-close {
+  margin-top: 10px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.sim-pwa-install-guide {
+  display: none;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f9fafb;
+  color: #374151;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.6;
+}
   </style>
 </head>
 
@@ -218,6 +318,34 @@
 </iframe>
   </div>
 
+  <!-- Modal Saran Download PWA -->
+<div id="sim-pwa-install-overlay" class="sim-pwa-install-overlay" hidden>
+  <div class="sim-pwa-install-card">
+    <div class="sim-pwa-install-icon">📲</div>
+
+    <h2>Download Aplikasi</h2>
+
+    <p>
+      Agar SIM AL-QUR'AN IBS RIAU lebih cepat dibuka dan tampil seperti aplikasi HP,
+      silakan tambahkan aplikasi ini ke layar utama.
+    </p>
+
+    <button id="sim-pwa-install-btn" type="button" class="sim-pwa-install-primary">
+      Download Aplikasi
+    </button>
+
+    <button id="sim-pwa-guide-btn" type="button" class="sim-pwa-install-secondary">
+      Lihat Cara Manual
+    </button>
+
+    <button id="sim-pwa-install-later-btn" type="button" class="sim-pwa-install-close">
+      Nanti Saja
+    </button>
+
+    <div id="sim-pwa-install-guide" class="sim-pwa-install-guide"></div>
+  </div>
+</div>
+
   <script>
    window.SIM_PWA_VERSION = "20260627-v12";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
@@ -230,6 +358,184 @@ let iframeLoaded = false;
 let currentView = "loading";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
+
+    /* =========================
+   SARAN DOWNLOAD PWA DI MOBILE BROWSER
+========================= */
+
+let simDeferredPwaInstallPrompt = null;
+
+const SIM_PWA_INSTALL_SESSION_KEY = "sim_pwa_install_prompt_closed_this_open";
+const SIM_PWA_INSTALLED_KEY = "sim_pwa_installed";
+const SIM_PWA_INSTALL_DELAY_MS = 1800;
+
+function simIsStandalonePwa() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function simIsMobileBrowser() {
+  const ua = navigator.userAgent || "";
+
+  const isMobile =
+    /Android|iPhone|iPad|iPod|Mobile/i.test(ua) ||
+    window.innerWidth <= 768;
+
+  return isMobile && !simIsStandalonePwa();
+}
+
+function simIsIosDevice() {
+  const ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod/i.test(ua);
+}
+
+function simCanShowPwaInstallModal() {
+  if (!simIsMobileBrowser()) return false;
+
+  // Jika sudah dibuka sebagai PWA, jangan tampilkan.
+  if (simIsStandalonePwa()) return false;
+
+  // Jika sudah pernah berhasil install, jangan tampilkan lagi.
+  if (localStorage.getItem(SIM_PWA_INSTALLED_KEY) === "1") return false;
+
+  // Jika user sudah klik Nanti Saja pada sesi buka aplikasi ini, jangan tampil ulang.
+  if (sessionStorage.getItem(SIM_PWA_INSTALL_SESSION_KEY) === "1") return false;
+
+  return true;
+}
+
+function simGetPwaManualGuideText() {
+  if (simIsIosDevice()) {
+    return `
+      <b>Cara install di iPhone / iPad:</b><br>
+      1. Buka situs ini melalui Safari.<br>
+      2. Tekan tombol <b>Share/Bagikan</b>.<br>
+      3. Pilih <b>Add to Home Screen</b> / <b>Tambahkan ke Layar Utama</b>.<br>
+      4. Tekan <b>Add</b> / <b>Tambah</b>.
+    `;
+  }
+
+  return `
+    <b>Cara install di Android:</b><br>
+    1. Buka situs ini melalui Chrome.<br>
+    2. Tekan menu titik tiga di kanan atas.<br>
+    3. Pilih <b>Install app</b> atau <b>Tambahkan ke layar utama</b>.<br>
+    4. Tekan <b>Install</b> / <b>Tambahkan</b>.
+  `;
+}
+
+function simShowPwaManualGuide() {
+  const guide = document.getElementById("sim-pwa-install-guide");
+  if (!guide) return;
+
+  guide.innerHTML = simGetPwaManualGuideText();
+  guide.style.display = "block";
+}
+
+function simHidePwaInstallModal() {
+  const overlay = document.getElementById("sim-pwa-install-overlay");
+  if (overlay) overlay.hidden = true;
+}
+
+function simShowPwaInstallModal() {
+  if (!simCanShowPwaInstallModal()) return;
+
+  // Jangan timpa modal notifikasi jika sedang tampil.
+  if (document.getElementById("sim-fcm-permission-overlay")) {
+    setTimeout(simShowPwaInstallModal, 2500);
+    return;
+  }
+
+  const overlay = document.getElementById("sim-pwa-install-overlay");
+  if (!overlay) return;
+
+  overlay.hidden = false;
+}
+
+function simSchedulePwaInstallPromptAfterLogin() {
+  setTimeout(function () {
+    simShowPwaInstallModal();
+  }, SIM_PWA_INSTALL_DELAY_MS);
+}
+
+window.addEventListener("beforeinstallprompt", function (event) {
+  // Wajib preventDefault agar prompt bisa dipanggil dari tombol sendiri.
+  event.preventDefault();
+
+  simDeferredPwaInstallPrompt = event;
+
+  // Kalau user buka via browser mobile, tampilkan modal saran download.
+  setTimeout(function () {
+    simShowPwaInstallModal();
+  }, 900);
+});
+
+window.addEventListener("appinstalled", function () {
+  localStorage.setItem(SIM_PWA_INSTALLED_KEY, "1");
+  sessionStorage.setItem(SIM_PWA_INSTALL_SESSION_KEY, "1");
+  simDeferredPwaInstallPrompt = null;
+  simHidePwaInstallModal();
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const installBtn = document.getElementById("sim-pwa-install-btn");
+  const guideBtn = document.getElementById("sim-pwa-guide-btn");
+  const laterBtn = document.getElementById("sim-pwa-install-later-btn");
+
+  if (installBtn) {
+    installBtn.addEventListener("click", async function () {
+      try {
+        if (simDeferredPwaInstallPrompt) {
+          installBtn.disabled = true;
+          installBtn.textContent = "Membuka Install...";
+
+          simDeferredPwaInstallPrompt.prompt();
+
+          const choiceResult = await simDeferredPwaInstallPrompt.userChoice;
+
+          simDeferredPwaInstallPrompt = null;
+          installBtn.disabled = false;
+          installBtn.textContent = "Download Aplikasi";
+
+          if (choiceResult && choiceResult.outcome === "accepted") {
+            localStorage.setItem(SIM_PWA_INSTALLED_KEY, "1");
+            sessionStorage.setItem(SIM_PWA_INSTALL_SESSION_KEY, "1");
+            simHidePwaInstallModal();
+            return;
+          }
+
+          sessionStorage.setItem(SIM_PWA_INSTALL_SESSION_KEY, "1");
+          simHidePwaInstallModal();
+          return;
+        }
+
+        // Jika browser tidak mengeluarkan beforeinstallprompt,
+        // tampilkan panduan manual.
+        simShowPwaManualGuide();
+      } catch (err) {
+        console.warn("Gagal membuka prompt install PWA:", err);
+        simShowPwaManualGuide();
+        installBtn.disabled = false;
+        installBtn.textContent = "Download Aplikasi";
+      }
+    });
+  }
+
+  if (guideBtn) {
+    guideBtn.addEventListener("click", function () {
+      simShowPwaManualGuide();
+    });
+  }
+
+  if (laterBtn) {
+    laterBtn.addEventListener("click", function () {
+      sessionStorage.setItem(SIM_PWA_INSTALL_SESSION_KEY, "1");
+      simHidePwaInstallModal();
+    });
+  }
+});
 
 /* =========================
    SIMPAN MENU TERAKHIR PWA
@@ -536,7 +842,7 @@ function buildIframeUrl(forceReload = false) {
 
     const iframe = document.getElementById("app");
 
-  iframe.addEventListener("load", function () {
+iframe.addEventListener("load", function () {
   const src = iframe.getAttribute("src") || "";
 
   if (!src || src === "about:blank") return;
@@ -551,6 +857,9 @@ function buildIframeUrl(forceReload = false) {
 
   clearLoadTimer();
   setView("app");
+
+  // Tampilkan modal saran download PWA saat dibuka dari browser mobile.
+  simSchedulePwaInstallPromptAfterLogin();
 });
 
     iframe.addEventListener("error", function () {
@@ -680,6 +989,14 @@ window.addEventListener("message", async function (event) {
   const iframe = document.getElementById("app");
 
   if (!data || !data.type) return;
+
+    if (
+    data.type === "SIM_LOGIN_PAGE_READY" ||
+    data.type === "SIM_PWA_INSTALL_PROMPT_REQUEST"
+  ) {
+    simShowPwaInstallModal();
+    return;
+  }
 
   if (
     data.type === "SIM_PWA_SAVE_ROUTE" ||
