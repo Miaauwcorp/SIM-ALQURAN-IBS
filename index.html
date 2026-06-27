@@ -231,17 +231,192 @@ let currentView = "loading";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
+/* =========================
+   SIMPAN MENU TERAKHIR PWA
+========================= */
+
+const LAST_ROUTE_KEY = "sim_murojaah_last_route_params_v1";
+const LAST_ROUTE_TIME_KEY = "sim_murojaah_last_route_saved_at";
+const LAST_ROUTE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+const SIM_INTERNAL_ROUTE_KEYS = new Set([
+  "source",
+  "bioV",
+  "_reload",
+  "v"
+]);
+
+const SIM_BLOCKED_ROUTE_KEYS = new Set([
+  "token",
+  "access_token",
+  "id_token",
+  "password",
+  "pass",
+  "credential",
+  "auth",
+  "code",
+  "state"
+]);
+
+function simCleanRouteParams(params) {
+  const clean = new URLSearchParams();
+
+  params.forEach(function (value, key) {
+    const k = String(key || "").trim();
+    const v = value == null ? "" : String(value).trim();
+
+    if (!k || !v) return;
+    if (SIM_BLOCKED_ROUTE_KEYS.has(k)) return;
+    if (k === "_reload") return;
+
+    clean.set(k, v);
+  });
+
+  return clean;
+}
+
+function simHasMeaningfulRouteParams(params) {
+  for (const [key, value] of params.entries()) {
+    if (SIM_INTERNAL_ROUTE_KEYS.has(key)) continue;
+
+    if (String(value || "").trim() !== "") {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function simSaveLastRouteFromParams(params) {
+  const clean = simCleanRouteParams(params);
+
+  if (!simHasMeaningfulRouteParams(clean)) return;
+
+  if (!clean.has("source")) {
+    clean.set("source", "pwa");
+  }
+
+  localStorage.setItem(LAST_ROUTE_KEY, clean.toString());
+  localStorage.setItem(LAST_ROUTE_TIME_KEY, Date.now().toString());
+
+  console.log("Menu terakhir PWA disimpan:", clean.toString());
+}
+
+function simGetSavedRouteParams() {
+  const saved = localStorage.getItem(LAST_ROUTE_KEY);
+  const savedAt = Number(localStorage.getItem(LAST_ROUTE_TIME_KEY) || "0");
+
+  if (!saved) return null;
+
+  if (savedAt && Date.now() - savedAt > LAST_ROUTE_MAX_AGE_MS) {
+    localStorage.removeItem(LAST_ROUTE_KEY);
+    localStorage.removeItem(LAST_ROUTE_TIME_KEY);
+    return null;
+  }
+
+  const params = new URLSearchParams(saved);
+
+  if (!simHasMeaningfulRouteParams(params)) return null;
+
+  return params;
+}
+
+function simApplyLastRouteToOuterUrl(params) {
+  const clean = simCleanRouteParams(params);
+
+  if (!simHasMeaningfulRouteParams(clean)) return;
+
+  if (!clean.has("source")) {
+    clean.set("source", "pwa");
+  }
+
+  clean.set("v", window.SIM_PWA_VERSION || "20260627-v11");
+
+  const nextUrl = window.location.pathname + "?" + clean.toString();
+
+  try {
+    window.history.replaceState(null, document.title, nextUrl);
+  } catch (err) {
+    console.warn("Gagal update URL luar PWA:", err);
+  }
+}
+
+function simSaveLastRouteFromMessage(data) {
+  const params = new URLSearchParams();
+
+  if (data.url) {
+    try {
+      const url = new URL(String(data.url), GAS_URL);
+
+      url.searchParams.forEach(function (value, key) {
+        params.set(key, value);
+      });
+
+      if (url.hash) {
+        params.set("hash", url.hash);
+      }
+    } catch (err) {
+      try {
+        const raw = String(data.url || "");
+        const query = raw.includes("?") ? raw.split("?")[1] : raw;
+        const fallbackParams = new URLSearchParams(query);
+
+        fallbackParams.forEach(function (value, key) {
+          params.set(key, value);
+        });
+      } catch (err2) {
+        console.warn("URL route tidak bisa dibaca:", err2);
+      }
+    }
+  }
+
+  if (data.page) params.set("page", String(data.page));
+  if (data.menu) params.set("menu", String(data.menu));
+  if (data.view) params.set("view", String(data.view));
+  if (data.route) params.set("route", String(data.route));
+  if (data.tab) params.set("tab", String(data.tab));
+
+  if (data.params && typeof data.params === "object") {
+    Object.keys(data.params).forEach(function (key) {
+      const value = data.params[key];
+
+      if (value != null && String(value).trim() !== "") {
+        params.set(key, String(value).trim());
+      }
+    });
+  }
+
+  simSaveLastRouteFromParams(params);
+  simApplyLastRouteToOuterUrl(params);
+}
+
 function buildIframeUrl(forceReload = false) {
   const currentParams = new URLSearchParams(window.location.search);
   const iframeParams = new URLSearchParams();
 
-  // Teruskan SEMUA parameter dari URL luar ke iframe GAS.
-  // Ini mencegah page=detail-santri dan nama santri hilang saat buka tab baru.
-  currentParams.forEach(function (value, key) {
-    if (key && value != null && String(value).trim() !== '') {
-      iframeParams.set(key, value);
-    }
+  const cleanCurrentParams = simCleanRouteParams(currentParams);
+
+  cleanCurrentParams.forEach(function (value, key) {
+    iframeParams.set(key, value);
   });
+
+  /*
+    Kalau URL luar punya page/menu/detail, simpan sebagai posisi terakhir.
+    Kalau URL luar hanya ./ atau hanya source/v, ambil menu terakhir dari localStorage.
+  */
+  if (simHasMeaningfulRouteParams(cleanCurrentParams)) {
+    simSaveLastRouteFromParams(cleanCurrentParams);
+  } else {
+    const savedRouteParams = simGetSavedRouteParams();
+
+    if (savedRouteParams) {
+      savedRouteParams.forEach(function (value, key) {
+        if (!iframeParams.has(key)) {
+          iframeParams.set(key, value);
+        }
+      });
+    }
+  }
 
   if (!iframeParams.has("source")) {
     iframeParams.set("source", "pwa");
@@ -337,7 +512,7 @@ function buildIframeUrl(forceReload = false) {
 
     const iframe = document.getElementById("app");
 
-    iframe.addEventListener("load", function () {
+  iframe.addEventListener("load", function () {
   const src = iframe.getAttribute("src") || "";
 
   if (!src || src === "about:blank") return;
@@ -346,6 +521,9 @@ function buildIframeUrl(forceReload = false) {
 
   // Simpan tanda bahwa aplikasi sudah pernah berhasil terbuka
   localStorage.setItem(HAS_OPENED_KEY, "1");
+
+  // Kalau PWA dibuka dengan parameter page/menu/detail, simpan sebagai menu terakhir
+  simSaveLastRouteFromParams(new URLSearchParams(window.location.search));
 
   clearLoadTimer();
   setView("app");
@@ -478,6 +656,15 @@ window.addEventListener("message", async function (event) {
   const iframe = document.getElementById("app");
 
   if (!data || !data.type) return;
+
+  if (
+    data.type === "SIM_PWA_SAVE_ROUTE" ||
+    data.type === "SIM_PWA_ROUTE_CHANGE"
+  ) {
+    simSaveLastRouteFromMessage(data);
+    return;
+  }
+
   if (!iframe || !iframe.contentWindow) return;
 
   // Tetap pertahankan fungsi Google SSO lama
