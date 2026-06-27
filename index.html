@@ -394,28 +394,52 @@ function buildIframeUrl(forceReload = false) {
   const currentParams = new URLSearchParams(window.location.search);
   const iframeParams = new URLSearchParams();
 
-  const cleanCurrentParams = simCleanRouteParams(currentParams);
+  /*
+    SHORT URL / ALIAS:
+    https://miaauwcorp.github.io/SIM-ALQURAN-IBS/?input
+    akan otomatis menjadi:
+    GAS_URL?page=input&source=pwa&bioV=3
+  */
+  const quickRoutes = {
+    input: "input",
+    rekap: "rekap",
+    santri: "santri",
+    dashboard: "dashboard",
+    detailSantri: "detail-santri",
+    "detail-santri": "detail-santri"
+  };
 
-  cleanCurrentParams.forEach(function (value, key) {
-    iframeParams.set(key, value);
+  currentParams.forEach(function (value, key) {
+    const cleanKey = String(key || "").trim();
+    const cleanValue = value == null ? "" : String(value).trim();
+
+    if (!cleanKey) return;
+
+    // Kalau formatnya ?input, ?rekap, ?santri
+    if (quickRoutes[cleanKey] && cleanValue === "") {
+      iframeParams.set("page", quickRoutes[cleanKey]);
+      return;
+    }
+
+    // Kalau formatnya ?menu=input
+    if (cleanKey === "menu" && quickRoutes[cleanValue]) {
+      iframeParams.set("page", quickRoutes[cleanValue]);
+      return;
+    }
+
+    // Format normal, misalnya ?page=input
+    if (cleanValue !== "") {
+      iframeParams.set(cleanKey, cleanValue);
+    }
   });
 
-  /*
-    Kalau URL luar punya page/menu/detail, simpan sebagai posisi terakhir.
-    Kalau URL luar hanya ./ atau hanya source/v, ambil menu terakhir dari localStorage.
-  */
-  if (simHasMeaningfulRouteParams(cleanCurrentParams)) {
-    simSaveLastRouteFromParams(cleanCurrentParams);
-  } else {
-    const savedRouteParams = simGetSavedRouteParams();
-
-    if (savedRouteParams) {
-      savedRouteParams.forEach(function (value, key) {
-        if (!iframeParams.has(key)) {
-          iframeParams.set(key, value);
-        }
-      });
-    }
+  // Cadangan tambahan kalau browser membaca ?input sebagai key kosong
+  if (!iframeParams.has("page")) {
+    Object.keys(quickRoutes).forEach(function (key) {
+      if (currentParams.has(key)) {
+        iframeParams.set("page", quickRoutes[key]);
+      }
+    });
   }
 
   if (!iframeParams.has("source")) {
