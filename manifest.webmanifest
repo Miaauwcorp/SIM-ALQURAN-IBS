@@ -1,8 +1,9 @@
 {
+  "id": "./",
   "name": "SIM AL-QUR'AN IBS RIAU",
   "short_name": "SIM AL-QUR'AN IBS",
-  "description": "Aplikasi SIM Murojaah IBS Riau",
-  "start_url": "./",
+  "description": "Aplikasi SIM Murojaah IBS Riau - versi 20260627-v11",
+  "start_url": "./?source=pwa&v=20260627-v11",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -10,13 +11,13 @@
   "theme_color": "#15803d",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "./icon-192-v11.png?v=20260627-v11",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "./icon-512-v11.png?v=20260627-v11",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -27,10 +28,10 @@
       "name": "Input Murojaah",
       "short_name": "Input",
       "description": "Buka halaman input murojaah",
-      "url": "./?page=input",
+      "url": "./?page=input&v=20260627-v11",
       "icons": [
         {
-          "src": "./icon-192.png",
+          "src": "./icon-192-v11.png?v=20260627-v11",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -40,10 +41,10 @@
       "name": "Rekap Murojaah",
       "short_name": "Rekap",
       "description": "Buka halaman rekap murojaah",
-      "url": "./?page=rekap",
+      "url": "./?page=rekap&v=20260627-v11",
       "icons": [
         {
-          "src": "./icon-192.png",
+          "src": "./icon-192-v11.png?v=20260627-v11",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -53,10 +54,10 @@
       "name": "Data Santri",
       "short_name": "Santri",
       "description": "Buka halaman data santri",
-      "url": "./?page=santri",
+      "url": "./?page=santri&v=20260627-v11",
       "icons": [
         {
-          "src": "./icon-192.png",
+          "src": "./icon-192-v11.png?v=20260627-v11",
           "sizes": "192x192",
           "type": "image/png"
         }
