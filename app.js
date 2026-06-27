@@ -451,6 +451,32 @@ window.addEventListener("appinstalled", function () {
   }, 800);
 });
 
+function simIsMobileBrowserForInstallPrompt() {
+  const ua = navigator.userAgent || "";
+
+  const isMobile =
+    /Android|iPhone|iPad|iPod|Mobile/i.test(ua) ||
+    window.innerWidth <= 768;
+
+  return isMobile && !isStandalonePwa();
+}
+
+function simShouldHoldFcmForPwaInstallPrompt() {
+  if (!simIsMobileBrowserForInstallPrompt()) return false;
+
+  if (localStorage.getItem("sim_pwa_installed") === "1") return false;
+
+  if (sessionStorage.getItem("sim_pwa_install_prompt_closed_this_open") === "1") {
+    return false;
+  }
+
+  return true;
+}
+
+function simIsPwaInstallOverlayOpen() {
+  return !!document.querySelector("#sim-pwa-install-overlay:not([hidden])");
+}
+
 function shouldShowFcmPromptEveryOpen() {
   if (!("Notification" in window)) return false;
 
@@ -705,6 +731,13 @@ function showFcmDeniedInstructionOverlay() {
 function scheduleFcmPromptEveryOpen() {
   setTimeout(async function () {
     if (!("Notification" in window)) return;
+
+        // Jika user masih di browser mobile dan belum menutup modal install PWA,
+    // tahan dulu modal notifikasi agar tidak bertabrakan.
+    if (simShouldHoldFcmForPwaInstallPrompt() || simIsPwaInstallOverlayOpen()) {
+      setTimeout(scheduleFcmPromptEveryOpen, 4000);
+      return;
+    }
 
     /*
       Jika user sudah mengaktifkan notifikasi lewat pengaturan HP/browser,
