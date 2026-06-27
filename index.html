@@ -15,10 +15,10 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="icon" href="./icon-192.png" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
-
+ <link rel="manifest" href="./manifest.webmanifest?v=20260627-v11" />
+<link rel="icon" href="./icon-192-v11.png?v=20260627-v11" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260627-v11" />
+  
   <style>
     html, body {
       margin: 0;
@@ -219,6 +219,7 @@
   </div>
 
   <script>
+    window.SIM_PWA_VERSION = "20260627-v11";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -564,17 +565,72 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 }
 });
 
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("./sw.js")
-          .then(function () {
-            console.log("Service Worker aktif");
-          })
-          .catch(function (err) {
-            console.error("Service Worker gagal:", err);
+   if ("serviceWorker" in navigator) {
+  let simSwRefreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", function () {
+    if (simSwRefreshing) return;
+
+    simSwRefreshing = true;
+
+    console.log("Service Worker baru aktif. Reload aplikasi...");
+    window.location.reload();
+  });
+
+  window.addEventListener("load", function () {
+    const swUrl =
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260627-v11");
+
+    navigator.serviceWorker.register(swUrl, {
+      updateViaCache: "none"
+    })
+      .then(function (registration) {
+        console.log("Service Worker aktif:", registration.scope);
+
+        registration.update().catch(function (err) {
+          console.warn("Cek update Service Worker gagal:", err);
+        });
+
+        registration.addEventListener("updatefound", function () {
+          const newWorker = registration.installing;
+
+          if (!newWorker) return;
+
+          newWorker.addEventListener("statechange", function () {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              console.log("Update aplikasi ditemukan.");
+
+              if (registration.waiting) {
+                registration.waiting.postMessage({
+                  type: "SIM_SKIP_WAITING"
+                });
+              }
+            }
           });
+        });
+
+        setInterval(function () {
+          registration.update().catch(function (err) {
+            console.warn("Auto cek update gagal:", err);
+          });
+        }, 60 * 60 * 1000);
+      })
+      .catch(function (err) {
+        console.error("Service Worker gagal:", err);
       });
+  });
+
+  navigator.serviceWorker.addEventListener("message", function (event) {
+    const data = event.data || {};
+
+    if (data.type === "SIM_SW_ACTIVATED") {
+      console.log("PWA versi aktif:", data.version);
     }
+  });
+}
 
     function simReplyToPasskeyRequester(event, payload) {
   const iframe = document.getElementById("app");
