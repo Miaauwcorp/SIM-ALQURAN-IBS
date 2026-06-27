@@ -1,19 +1,85 @@
-const CACHE_NAME = "sim-presensi-ibs-v10-fcm";
+const APP_VERSION = "20260627-v11";
+const CACHE_NAME = "sim-murojaah-ibs-" + APP_VERSION;
 
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
+  "./app.js",
+  "./icon-192-v11.png",
+  "./icon-512-v11.png",
   "./Download/",
   "./Download/index.html"
 ];
 
+function isSameOrigin(request) {
+  try {
+    return new URL(request.url).origin === self.location.origin;
+  } catch (err) {
+    return false;
+  }
+}
+
+function isCriticalAsset(url) {
+  return (
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/manifest.webmanifest") ||
+    url.pathname.endsWith("/app.js") ||
+    url.pathname.endsWith("/icon-192-v11.png") ||
+    url.pathname.endsWith("/icon-512-v11.png")
+  );
+}
+
+async function networkFirst(request, fallbackUrl) {
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+
+    if (response && response.ok && isSameOrigin(request)) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+
+    if (fallbackUrl) {
+      const fallback = await caches.match(fallbackUrl);
+      if (fallback) return fallback;
+    }
+
+    return Response.error();
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request);
+
+  const fetchPromise = fetch(request)
+    .then(async function (response) {
+      if (response && response.ok && isSameOrigin(request)) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      }
+
+      return response;
+    })
+    .catch(function () {
+      return cached || Response.error();
+    });
+
+  return cached || fetchPromise;
+}
+
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(APP_SHELL);
+      return cache.addAll(
+        APP_SHELL.map(function (url) {
+          return new Request(url, { cache: "reload" });
+        })
+      );
     })
   );
 
@@ -22,20 +88,44 @@ self.addEventListener("install", function (event) {
 
 self.addEventListener("activate", function (event) {
   event.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys
-          .filter(function (key) {
-            return key !== CACHE_NAME;
-          })
-          .map(function (key) {
-            return caches.delete(key);
-          })
-      );
-    })
+    caches.keys()
+      .then(function (keys) {
+        return Promise.all(
+          keys
+            .filter(function (key) {
+              return key !== CACHE_NAME;
+            })
+            .map(function (key) {
+              return caches.delete(key);
+            })
+        );
+      })
+      .then(function () {
+        return self.clients.claim();
+      })
+      .then(function () {
+        return self.clients.matchAll({
+          type: "window",
+          includeUncontrolled: true
+        });
+      })
+      .then(function (clientList) {
+        clientList.forEach(function (client) {
+          client.postMessage({
+            type: "SIM_SW_ACTIVATED",
+            version: APP_VERSION
+          });
+        });
+      })
   );
+});
 
-  self.clients.claim();
+self.addEventListener("message", function (event) {
+  const data = event.data || {};
+
+  if (data.type === "SIM_SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", function (event) {
@@ -43,17 +133,27 @@ self.addEventListener("fetch", function (event) {
 
   if (request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(request).then(function (cached) {
-      return cached || fetch(request).catch(function () {
-        if (request.mode === "navigate") {
-          return caches.match("./index.html");
-        }
+  const url = new URL(request.url);
 
-        return Response.error();
-      });
-    })
-  );
+  if (!isSameOrigin(request)) {
+    return;
+  }
+
+  if (url.pathname.endsWith("/sw.js")) {
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirst(request, "./index.html"));
+    return;
+  }
+
+  if (isCriticalAsset(url)) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  event.respondWith(staleWhileRevalidate(request));
 });
 
 /* =========================
@@ -92,11 +192,11 @@ self.addEventListener("push", function (event) {
 
   const icon =
     data.icon ||
-    "./icon-192.png";
+    "./icon-192-v11.png";
 
   const badge =
     data.badge ||
-    "./icon-192.png";
+    "./icon-192-v11.png";
 
   const options = {
     body,
@@ -118,7 +218,10 @@ self.addEventListener("push", function (event) {
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
 
-  const targetUrl = event.notification?.data?.url || "./";
+  const targetUrl =
+    event.notification && event.notification.data && event.notification.data.url
+      ? event.notification.data.url
+      : "./";
 
   event.waitUntil(
     clients.matchAll({
