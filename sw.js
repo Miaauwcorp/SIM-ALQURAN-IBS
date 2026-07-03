@@ -1,4 +1,4 @@
-const APP_VERSION = "20260703-v16";
+const APP_VERSION = "20260703-v17";
 const CACHE_NAME = "sim-murojaah-ibs-" + APP_VERSION;
 
 const APP_SHELL = [
