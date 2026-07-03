@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260703-v16" />
-<link rel="icon" href="./icon-192-v11.png?v=20260703-v16" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v16" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260703-v17" />
+<link rel="icon" href="./icon-192-v11.png?v=20260703-v17" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v17" />
   
   <style>
     html, body {
@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260703-v16";
+   window.SIM_PWA_VERSION = "20260703-v17";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -360,7 +360,7 @@ let currentView = "loading";
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260703-v16";
+const FORCE_ROUTE_CLEAN_VERSION = "20260703-v17";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -759,8 +759,14 @@ const routeOptions = {
 // Route publik seperti laporanToken / raporToken jangan disimpan permanen.
 // Kalau disimpan di localStorage, PWA HP akan terus membuka halaman verifikasi.
 if (routeOptions.publicRoute) {
+  // Halaman verifikasi boleh tampil di iframe saat ini,
+  // tetapi jangan ditempel permanen ke URL luar PWA.
   simClearSavedRoute();
-  simApplyLastRouteToOuterUrl(params, routeOptions);
+
+  setTimeout(function () {
+    simResetOuterUrlToBase();
+  }, 500);
+
   return;
 }
 
@@ -953,8 +959,13 @@ iframe.addEventListener("load", function () {
   // Simpan tanda bahwa aplikasi sudah pernah berhasil terbuka
   localStorage.setItem(HAS_OPENED_KEY, "1");
 
-  // Kalau PWA dibuka dengan parameter page/menu/detail, simpan sebagai menu terakhir
-  simSaveLastRouteFromParams(new URLSearchParams(window.location.search));
+  const currentParams = new URLSearchParams(window.location.search);
+
+  // Jangan simpan route publik seperti laporanToken/raporToken.
+  // Kalau disimpan, PWA HP akan terus membuka halaman verifikasi.
+  if (!simIsPublicRouteParams(currentParams) && simIsStandalonePwa()) {
+    simSaveLastRouteFromParams(currentParams);
+  }
 
   clearLoadTimer();
   setView("app");
