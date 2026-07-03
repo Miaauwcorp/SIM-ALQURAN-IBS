@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260627-v12" />
-<link rel="icon" href="./icon-192-v11.png?v=20260627-v12" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260627-v12" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260703-v13" />
+<link rel="icon" href="./icon-192-v11.png?v=20260703-v13" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v13" />
   
   <style>
     html, body {
@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260627-v12";
+   window.SIM_PWA_VERSION = "20260703-v13";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -698,6 +698,16 @@ function simSaveLastRouteFromMessage(data) {
 
 function buildIframeUrl(forceReload = false) {
   const currentParams = new URLSearchParams(window.location.search);
+
+  // Kalau URL luar tidak punya page/menu yang berarti,
+  // pakai route terakhir yang tersimpan.
+  const savedParams = simGetSavedRouteParams();
+
+  const sourceParams =
+    simHasMeaningfulRouteParams(currentParams)
+      ? currentParams
+      : (savedParams || currentParams);
+
   const iframeParams = new URLSearchParams();
 
   /*
@@ -715,11 +725,14 @@ function buildIframeUrl(forceReload = false) {
     "detail-santri": "detail-santri"
   };
 
-  currentParams.forEach(function (value, key) {
+  sourceParams.forEach(function (value, key) {
     const cleanKey = String(key || "").trim();
     const cleanValue = value == null ? "" : String(value).trim();
 
     if (!cleanKey) return;
+    if (SIM_BLOCKED_ROUTE_KEYS.has(cleanKey)) return;
+    if (cleanKey === "_reload") return;
+    if (cleanKey === "v") return;
 
     // Kalau formatnya ?input, ?rekap, ?santri
     if (quickRoutes[cleanKey] && cleanValue === "") {
@@ -742,7 +755,7 @@ function buildIframeUrl(forceReload = false) {
   // Cadangan tambahan kalau browser membaca ?input sebagai key kosong
   if (!iframeParams.has("page")) {
     Object.keys(quickRoutes).forEach(function (key) {
-      if (currentParams.has(key)) {
+      if (sourceParams.has(key)) {
         iframeParams.set("page", quickRoutes[key]);
       }
     });
@@ -874,6 +887,46 @@ iframe.addEventListener("load", function () {
 
     loadApp();
     showOfflineIfNeeded();
+
+    let simWasHiddenAt = 0;
+
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") {
+    simWasHiddenAt = Date.now();
+    return;
+  }
+
+  if (document.visibilityState === "visible") {
+    const hiddenDuration = Date.now() - simWasHiddenAt;
+
+    // Saat layar HP hidup lagi, jangan reload iframe.
+    // Cukup tampilkan kembali app jika iframe masih ada.
+    const iframe = document.getElementById("app");
+
+    if (iframe && iframe.getAttribute("src")) {
+      clearLoadTimer();
+      setView("app");
+      return;
+    }
+
+    // Kalau iframe benar-benar kosong karena sistem membuang memori,
+    // baru load ulang dengan route terakhir.
+    if (hiddenDuration > 5000) {
+      loadApp(false);
+    }
+  }
+});
+
+window.addEventListener("pageshow", function (event) {
+  // Jika halaman kembali dari bfcache / resume Android,
+  // jangan paksa reload. Cukup tampilkan iframe yang sudah ada.
+  const iframe = document.getElementById("app");
+
+  if (event.persisted && iframe && iframe.getAttribute("src")) {
+    clearLoadTimer();
+    setView("app");
+  }
+});
 
    window.addEventListener("online", function () {
   // Reload hanya kalau sebelumnya memang offline/server,
@@ -1097,13 +1150,15 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
   let simSwRefreshing = false;
 
   navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (simSwRefreshing) return;
+  if (simSwRefreshing) return;
 
-    simSwRefreshing = true;
+  simSwRefreshing = true;
 
-    console.log("Service Worker baru aktif. Reload aplikasi...");
-    window.location.reload();
-  });
+  console.log("Service Worker baru aktif. Tidak reload otomatis agar posisi halaman tetap aman.");
+
+  // Jangan paksa reload saat PWA aktif / baru bangun dari layar mati.
+  // Update service worker akan dipakai pada pembukaan berikutnya.
+});
 
   window.addEventListener("load", function () {
     const swUrl =
