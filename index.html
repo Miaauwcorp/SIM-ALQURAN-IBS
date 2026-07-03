@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260703-v15" />
-<link rel="icon" href="./icon-192-v11.png?v=20260703-v15" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v15" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260703-v16" />
+<link rel="icon" href="./icon-192-v11.png?v=20260703-v16" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v16" />
   
   <style>
     html, body {
@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260703-v15";
+   window.SIM_PWA_VERSION = "20260703-v16";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -358,6 +358,29 @@ let iframeLoaded = false;
 let currentView = "loading";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
+
+    const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
+const FORCE_ROUTE_CLEAN_VERSION = "20260703-v16";
+
+(function forceCleanBadPublicRouteOnce() {
+  try {
+    const cleanedVersion = localStorage.getItem(FORCE_ROUTE_CLEAN_VERSION_KEY);
+
+    if (cleanedVersion === FORCE_ROUTE_CLEAN_VERSION) return;
+
+    const saved = localStorage.getItem("sim_murojaah_last_route_params_v1") || "";
+    const params = new URLSearchParams(saved);
+
+    if (params.has("laporanToken") || params.has("raporToken")) {
+      localStorage.removeItem("sim_murojaah_last_route_params_v1");
+      localStorage.removeItem("sim_murojaah_last_route_saved_at");
+    }
+
+    localStorage.setItem(FORCE_ROUTE_CLEAN_VERSION_KEY, FORCE_ROUTE_CLEAN_VERSION);
+  } catch (err) {
+    console.warn("Gagal membersihkan route lama:", err);
+  }
+})();
 
     /* =========================
    SARAN DOWNLOAD PWA DI MOBILE BROWSER
@@ -733,11 +756,22 @@ const routeOptions = {
   publicRoute: data.publicRoute === true
 };
 
-simSaveLastRouteFromParams(params, routeOptions);
-
-if (data.publicRoute === true) {
+// Route publik seperti laporanToken / raporToken jangan disimpan permanen.
+// Kalau disimpan di localStorage, PWA HP akan terus membuka halaman verifikasi.
+if (routeOptions.publicRoute) {
+  simClearSavedRoute();
   simApplyLastRouteToOuterUrl(params, routeOptions);
+  return;
 }
+
+// Route internal hanya disimpan kalau aplikasi dibuka sebagai PWA.
+if (simIsStandalonePwa()) {
+  simSaveLastRouteFromParams(params, routeOptions);
+} else {
+  simClearSavedRoute();
+}
+
+simResetOuterUrlToBase();
 }
 
 function buildIframeUrl(forceReload = false) {
@@ -746,23 +780,32 @@ function buildIframeUrl(forceReload = false) {
 
   const iframeParams = new URLSearchParams();
 
-  const isPublicRoute = simIsPublicRouteParams(currentParams);
+  const currentIsPublicRoute = simIsPublicRouteParams(currentParams);
+  const savedIsPublicRoute = savedParams && simIsPublicRouteParams(savedParams);
   const isStandalone = simIsStandalonePwa();
 
-  /*
-    Prioritas:
-    1. Jika URL sekarang adalah public route, misalnya ?laporanToken=xxx, pakai itu.
-    2. Jika mode PWA standalone, boleh pakai route terakhir.
-    3. Jika mode web/browser biasa, jangan pakai route lama agar tidak masuk detail santri.
-  */
   let sourceParams = new URLSearchParams();
 
-  if (isPublicRoute) {
+  /*
+    Aturan penting:
+    1. Kalau URL sekarang punya laporanToken/raporToken, buka halaman verifikasi.
+    2. Kalau URL sekarang normal dan saved route berisi laporanToken/raporToken, hapus.
+    3. Kalau PWA standalone, boleh pakai saved route internal.
+    4. Kalau web/browser biasa, jangan pakai saved route lama.
+  */
+
+  if (currentIsPublicRoute) {
     sourceParams = currentParams;
-  } else if (isStandalone && simHasMeaningfulRouteParams(currentParams)) {
-    sourceParams = currentParams;
-  } else if (isStandalone && savedParams) {
-    sourceParams = savedParams;
+  } else {
+    if (savedIsPublicRoute) {
+      simClearSavedRoute();
+    }
+
+    if (isStandalone && simHasMeaningfulRouteParams(currentParams)) {
+      sourceParams = currentParams;
+    } else if (isStandalone && savedParams && !savedIsPublicRoute) {
+      sourceParams = savedParams;
+    }
   }
 
   const quickRoutes = {
