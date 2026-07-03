@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260703-v13" />
-<link rel="icon" href="./icon-192-v11.png?v=20260703-v13" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v13" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260703-v14" />
+<link rel="icon" href="./icon-192-v11.png?v=20260703-v14" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v14" />
   
   <style>
     html, body {
@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260703-v13";
+   window.SIM_PWA_VERSION = "20260703-v14";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -564,15 +564,30 @@ const SIM_BLOCKED_ROUTE_KEYS = new Set([
   "state"
 ]);
 
-function simCleanRouteParams(params) {
+function simCleanRouteParams(params, options = {}) {
   const clean = new URLSearchParams();
+  const isPublicRoute = !!options.publicRoute;
 
   params.forEach(function (value, key) {
     const k = String(key || "").trim();
     const v = value == null ? "" : String(value).trim();
 
     if (!k || !v) return;
-    if (SIM_BLOCKED_ROUTE_KEYS.has(k)) return;
+
+    // Untuk route publik verifikasi dokumen, token boleh disimpan.
+    // Untuk route login/OAuth tetap diblokir.
+    if (SIM_BLOCKED_ROUTE_KEYS.has(k)) {
+      const allowedPublicToken =
+        isPublicRoute &&
+        (
+          k === "token" ||
+          k === "verifyToken" ||
+          k === "verificationToken"
+        );
+
+      if (!allowedPublicToken) return;
+    }
+
     if (k === "_reload") return;
 
     clean.set(k, v);
@@ -593,8 +608,8 @@ function simHasMeaningfulRouteParams(params) {
   return false;
 }
 
-function simSaveLastRouteFromParams(params) {
-  const clean = simCleanRouteParams(params);
+function simSaveLastRouteFromParams(params, options = {}) {
+  const clean = simCleanRouteParams(params, options);
 
   if (!simHasMeaningfulRouteParams(clean)) return;
 
@@ -627,9 +642,9 @@ function simGetSavedRouteParams() {
   return params;
 }
 
-function simApplyLastRouteToOuterUrl(params) {
-  const clean = simCleanRouteParams(params);
-
+function simApplyLastRouteToOuterUrl(params, options = {}) {
+  const clean = simCleanRouteParams(params, options);
+  
   if (!simHasMeaningfulRouteParams(clean)) return;
 
   if (!clean.has("source")) {
@@ -692,8 +707,15 @@ function simSaveLastRouteFromMessage(data) {
     });
   }
 
-  simSaveLastRouteFromParams(params);
-  simApplyLastRouteToOuterUrl(params);
+const routeOptions = {
+  publicRoute: data.publicRoute === true
+};
+
+simSaveLastRouteFromParams(params, routeOptions);
+
+if (data.publicRoute === true) {
+  simApplyLastRouteToOuterUrl(params, routeOptions);
+}
 }
 
 function buildIframeUrl(forceReload = false) {
@@ -1051,13 +1073,21 @@ window.addEventListener("message", async function (event) {
     return;
   }
 
-  if (
-    data.type === "SIM_PWA_SAVE_ROUTE" ||
-    data.type === "SIM_PWA_ROUTE_CHANGE"
-  ) {
-    simSaveLastRouteFromMessage(data);
-    return;
-  }
+ if (
+  data.type === "SIM_PWA_SAVE_ROUTE" ||
+  data.type === "SIM_PWA_ROUTE_CHANGE"
+) {
+  simSaveLastRouteFromMessage(data);
+  return;
+}
+
+if (data.type === "SIM_PWA_PUBLIC_ROUTE") {
+  simSaveLastRouteFromMessage({
+    ...data,
+    publicRoute: true
+  });
+  return;
+}
 
   if (!iframe || !iframe.contentWindow) return;
 
