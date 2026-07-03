@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260703-v14" />
-<link rel="icon" href="./icon-192-v11.png?v=20260703-v14" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v14" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260703-v15" />
+<link rel="icon" href="./icon-192-v11.png?v=20260703-v15" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260703-v15" />
   
   <style>
     html, body {
@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260703-v14";
+   window.SIM_PWA_VERSION = "20260703-v15";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -642,6 +642,28 @@ function simGetSavedRouteParams() {
   return params;
 }
 
+    function simIsPublicRouteParams(params) {
+  const p = params instanceof URLSearchParams
+    ? params
+    : new URLSearchParams(params || "");
+
+  return p.has("laporanToken") || p.has("raporToken");
+}
+
+function simClearSavedRoute() {
+  localStorage.removeItem(LAST_ROUTE_KEY);
+  localStorage.removeItem(LAST_ROUTE_TIME_KEY);
+}
+
+function simResetOuterUrlToBase() {
+  try {
+    const baseUrl = window.location.pathname;
+    window.history.replaceState(null, document.title, baseUrl);
+  } catch (err) {
+    console.warn("Gagal reset URL luar PWA:", err);
+  }
+}
+
 function simApplyLastRouteToOuterUrl(params, options = {}) {
   const clean = simCleanRouteParams(params, options);
   
@@ -720,24 +742,29 @@ if (data.publicRoute === true) {
 
 function buildIframeUrl(forceReload = false) {
   const currentParams = new URLSearchParams(window.location.search);
-
-  // Kalau URL luar tidak punya page/menu yang berarti,
-  // pakai route terakhir yang tersimpan.
   const savedParams = simGetSavedRouteParams();
-
-  const sourceParams =
-    simHasMeaningfulRouteParams(currentParams)
-      ? currentParams
-      : (savedParams || currentParams);
 
   const iframeParams = new URLSearchParams();
 
+  const isPublicRoute = simIsPublicRouteParams(currentParams);
+  const isStandalone = simIsStandalonePwa();
+
   /*
-    SHORT URL / ALIAS:
-    https://miaauwcorp.github.io/SIM-ALQURAN-IBS/?input
-    akan otomatis menjadi:
-    GAS_URL?page=input&source=pwa&bioV=3
+    Prioritas:
+    1. Jika URL sekarang adalah public route, misalnya ?laporanToken=xxx, pakai itu.
+    2. Jika mode PWA standalone, boleh pakai route terakhir.
+    3. Jika mode web/browser biasa, jangan pakai route lama agar tidak masuk detail santri.
   */
+  let sourceParams = new URLSearchParams();
+
+  if (isPublicRoute) {
+    sourceParams = currentParams;
+  } else if (isStandalone && simHasMeaningfulRouteParams(currentParams)) {
+    sourceParams = currentParams;
+  } else if (isStandalone && savedParams) {
+    sourceParams = savedParams;
+  }
+
   const quickRoutes = {
     input: "input",
     rekap: "rekap",
@@ -756,25 +783,21 @@ function buildIframeUrl(forceReload = false) {
     if (cleanKey === "_reload") return;
     if (cleanKey === "v") return;
 
-    // Kalau formatnya ?input, ?rekap, ?santri
     if (quickRoutes[cleanKey] && cleanValue === "") {
       iframeParams.set("page", quickRoutes[cleanKey]);
       return;
     }
 
-    // Kalau formatnya ?menu=input
     if (cleanKey === "menu" && quickRoutes[cleanValue]) {
       iframeParams.set("page", quickRoutes[cleanValue]);
       return;
     }
 
-    // Format normal, misalnya ?page=input
     if (cleanValue !== "") {
       iframeParams.set(cleanKey, cleanValue);
     }
   });
 
-  // Cadangan tambahan kalau browser membaca ?input sebagai key kosong
   if (!iframeParams.has("page")) {
     Object.keys(quickRoutes).forEach(function (key) {
       if (sourceParams.has(key)) {
