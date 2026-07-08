@@ -347,7 +347,7 @@
 </div>
 
   <script>
-   window.SIM_PWA_VERSION = "20260703-v17";
+  window.SIM_PWA_VERSION = "20260708-v18";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -360,7 +360,7 @@ let currentView = "loading";
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260703-v17";
+const FORCE_ROUTE_CLEAN_VERSION = "20260708-v18";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -572,6 +572,7 @@ const SIM_INTERNAL_ROUTE_KEYS = new Set([
   "source",
   "bioV",
   "_reload",
+  "_open",
   "v"
 ]);
 
@@ -781,92 +782,300 @@ simResetOuterUrlToBase();
 }
 
 function buildIframeUrl(forceReload = false) {
-  const currentParams = new URLSearchParams(window.location.search);
-  const savedParams = simGetSavedRouteParams();
+  const currentParams =
+    new URLSearchParams(window.location.search);
 
-  const iframeParams = new URLSearchParams();
+  const savedParams =
+    simGetSavedRouteParams();
 
-  const currentIsPublicRoute = simIsPublicRouteParams(currentParams);
-  const savedIsPublicRoute = savedParams && simIsPublicRouteParams(savedParams);
-  const isStandalone = simIsStandalonePwa();
+  const iframeParams =
+    new URLSearchParams();
 
-  let sourceParams = new URLSearchParams();
+  const currentIsPublicRoute =
+    simIsPublicRouteParams(currentParams);
+
+  const savedIsPublicRoute =
+    !!(
+      savedParams &&
+      simIsPublicRouteParams(savedParams)
+    );
+
+  const isStandalone =
+    simIsStandalonePwa();
 
   /*
-    Aturan penting:
-    1. Kalau URL sekarang punya laporanToken/raporToken, buka halaman verifikasi.
-    2. Kalau URL sekarang normal dan saved route berisi laporanToken/raporToken, hapus.
-    3. Kalau PWA standalone, boleh pakai saved route internal.
-    4. Kalau web/browser biasa, jangan pakai saved route lama.
-  */
+   * Bersihkan parameter terlebih dahulu.
+   * Parameter login/OAuth seperti code, state,
+   * access_token, password dan credential
+   * tidak akan diteruskan ke iframe.
+   */
+  const cleanCurrentParams =
+    simCleanRouteParams(
+      currentParams,
+      {
+        publicRoute: currentIsPublicRoute
+      }
+    );
 
+  const hasCurrentRoute =
+    simHasMeaningfulRouteParams(
+      cleanCurrentParams
+    );
+
+  let sourceParams =
+    new URLSearchParams();
+
+  /*
+   * PRIORITAS ROUTE:
+   *
+   * 1. Parameter yang sedang ada pada URL selalu diprioritaskan,
+   *    baik dibuka melalui browser biasa maupun PWA.
+   *
+   * 2. Saved route hanya dipakai ketika:
+   *    - URL sekarang tidak memiliki route; dan
+   *    - aplikasi dibuka sebagai PWA standalone.
+   *
+   * 3. Route publik laporan/rapor tetap dapat dibuka.
+   *
+   * 4. Browser biasa tidak memulihkan saved route lama.
+   */
   if (currentIsPublicRoute) {
-    sourceParams = currentParams;
+    sourceParams =
+      cleanCurrentParams;
+
   } else {
+    /*
+     * Bersihkan saved route publik lama agar
+     * halaman verifikasi tidak terbuka terus-menerus.
+     */
     if (savedIsPublicRoute) {
       simClearSavedRoute();
     }
 
-    if (isStandalone && simHasMeaningfulRouteParams(currentParams)) {
-      sourceParams = currentParams;
-    } else if (isStandalone && savedParams && !savedIsPublicRoute) {
-      sourceParams = savedParams;
+    /*
+     * INI PERBAIKAN UTAMANYA:
+     * Route URL saat ini tetap diteruskan meskipun
+     * tab dibuka sebagai browser biasa.
+     */
+    if (hasCurrentRoute) {
+      sourceParams =
+        cleanCurrentParams;
+
+    } else if (
+      isStandalone &&
+      savedParams &&
+      !savedIsPublicRoute
+    ) {
+      sourceParams =
+        simCleanRouteParams(
+          savedParams,
+          {
+            publicRoute: false
+          }
+        );
     }
   }
 
+  /*
+   * Alias route lama atau route singkat.
+   */
   const quickRoutes = {
     input: "input",
-    rekap: "rekap",
-    santri: "santri",
+    rekap: "laporan",
+    laporan: "laporan",
+    santri: "progress-santri",
     dashboard: "dashboard",
+
     detailSantri: "detail-santri",
-    "detail-santri": "detail-santri"
+    "detail-santri": "detail-santri",
+
+    detailMuhafizh: "detail-muhafizh",
+    "detail-muhafizh": "detail-muhafizh"
   };
 
+  /*
+   * Salin parameter route ke URL iframe Apps Script.
+   */
   sourceParams.forEach(function (value, key) {
-    const cleanKey = String(key || "").trim();
-    const cleanValue = value == null ? "" : String(value).trim();
+    const cleanKey =
+      String(key || "").trim();
+
+    const cleanValue =
+      value == null
+        ? ""
+        : String(value).trim();
 
     if (!cleanKey) return;
-    if (SIM_BLOCKED_ROUTE_KEYS.has(cleanKey)) return;
-    if (cleanKey === "_reload") return;
-    if (cleanKey === "v") return;
 
-    if (quickRoutes[cleanKey] && cleanValue === "") {
-      iframeParams.set("page", quickRoutes[cleanKey]);
+    /*
+     * Jangan pernah meneruskan parameter rahasia.
+     */
+    if (
+      SIM_BLOCKED_ROUTE_KEYS.has(cleanKey)
+    ) {
       return;
     }
 
-    if (cleanKey === "menu" && quickRoutes[cleanValue]) {
-      iframeParams.set("page", quickRoutes[cleanValue]);
+    /*
+     * Parameter internal wrapper tidak perlu
+     * masuk ke Apps Script.
+     */
+    if (
+      cleanKey === "_reload" ||
+      cleanKey === "_open" ||
+      cleanKey === "v"
+    ) {
       return;
     }
 
+    /*
+     * Mendukung URL seperti:
+     * ?detail-santri=
+     */
+    if (
+      quickRoutes[cleanKey] &&
+      cleanValue === ""
+    ) {
+      iframeParams.set(
+        "page",
+        quickRoutes[cleanKey]
+      );
+
+      return;
+    }
+
+    /*
+     * Mendukung URL seperti:
+     * ?menu=detail-santri
+     */
+    if (
+      cleanKey === "menu" &&
+      quickRoutes[cleanValue]
+    ) {
+      iframeParams.set(
+        "page",
+        quickRoutes[cleanValue]
+      );
+
+      return;
+    }
+
+    /*
+     * Parameter normal:
+     * page, nama, source, tglAwal, tglAkhir, dan lainnya.
+     */
     if (cleanValue !== "") {
-      iframeParams.set(cleanKey, cleanValue);
+      iframeParams.set(
+        cleanKey,
+        cleanValue
+      );
     }
   });
 
+  /*
+   * Fallback untuk parameter route singkat
+   * yang tidak memiliki value.
+   */
   if (!iframeParams.has("page")) {
-    Object.keys(quickRoutes).forEach(function (key) {
-      if (sourceParams.has(key)) {
-        iframeParams.set("page", quickRoutes[key]);
+    Object.keys(quickRoutes).some(
+      function (key) {
+        if (!sourceParams.has(key)) {
+          return false;
+        }
+
+        iframeParams.set(
+          "page",
+          quickRoutes[key]
+        );
+
+        return true;
       }
-    });
+    );
   }
 
+  /*
+   * Validasi khusus detail santri.
+   * Detail hanya boleh diteruskan jika nama tersedia.
+   */
+  if (
+    iframeParams.get("page") ===
+      "detail-santri" &&
+    !String(
+      iframeParams.get("nama") || ""
+    ).trim()
+  ) {
+    console.warn(
+      "Route detail-santri diabaikan karena nama santri kosong."
+    );
+
+    iframeParams.delete("page");
+  }
+
+  /*
+   * Validasi khusus detail muhafizh.
+   */
+  if (
+    iframeParams.get("page") ===
+      "detail-muhafizh" &&
+    !String(
+      iframeParams.get("nama") || ""
+    ).trim()
+  ) {
+    console.warn(
+      "Route detail-muhafizh diabaikan karena nama muhafizh kosong."
+    );
+
+    iframeParams.delete("page");
+  }
+
+  /*
+   * Tambahkan identitas sumber apabila belum ada.
+   */
   if (!iframeParams.has("source")) {
-    iframeParams.set("source", "pwa");
+    iframeParams.set(
+      "source",
+      isStandalone
+        ? "pwa"
+        : "web-wrapper"
+    );
   }
 
   iframeParams.set("bioV", "3");
 
+  /*
+   * Cache buster khusus tombol Coba Lagi.
+   */
   if (forceReload) {
-    iframeParams.set("_reload", Date.now().toString());
+    iframeParams.set(
+      "_reload",
+      Date.now().toString()
+    );
   }
 
-  const query = iframeParams.toString();
-  return query ? `${GAS_URL}?${query}` : GAS_URL;
+  const query =
+    iframeParams.toString();
+
+  const finalUrl =
+    query
+      ? `${GAS_URL}?${query}`
+      : GAS_URL;
+
+  console.log(
+    "Route wrapper saat ini:",
+    currentParams.toString()
+  );
+
+  console.log(
+    "Route yang diteruskan ke Apps Script:",
+    iframeParams.toString()
+  );
+
+  console.log(
+    "URL iframe Apps Script:",
+    finalUrl
+  );
+
+  return finalUrl;
 }
 
   function setView(view) {
