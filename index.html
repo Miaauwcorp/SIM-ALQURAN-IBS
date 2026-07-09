@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260709-v19" />
-<link rel="icon" href="./icon-192-v11.png?v=20260709-v19" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260709-v19" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260710-v20" />
+<link rel="icon" href="./icon-192-v11.png?v=20260710-v20" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v20" />
   
   <style>
     html, body {
@@ -88,18 +88,19 @@
       flex-wrap: wrap;
     }
 
-    .retry-btn,
-    .wa-help {
-      display: inline-block;
-      padding: 12px 18px;
-      border-radius: 999px;
-      border: none;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.22);
-    }
+   .retry-btn,
+.wa-help,
+.direct-app-btn {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: none;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+}
 
     .retry-btn {
       background: #fff;
@@ -110,6 +111,21 @@
       background: #25d366;
       color: #fff;
     }
+
+    .direct-app-btn {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.direct-app-btn:hover {
+  background: #fbbf24;
+}
+
+.retry-btn:active,
+.wa-help:active,
+.direct-app-btn:active {
+  transform: scale(0.98);
+}
 
     .retry-btn:active,
     .wa-help:active {
@@ -285,23 +301,35 @@
         Silakan coba lagi. Jika masih gagal, hubungi admin melalui WhatsApp.
       </p>
 
-      <div class="actions">
-        <button type="button" class="retry-btn" onclick="retryApp()">
-          Coba Lagi
-        </button>
+     <div class="actions">
+  <button
+    type="button"
+    class="retry-btn"
+    onclick="retryApp()">
+    Coba Lagi
+  </button>
 
-        <a
-          class="wa-help"
-          href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
-          target="_blank"
-          rel="noopener noreferrer">
-          Bantuan WhatsApp
-        </a>
-      </div>
+  <button
+    type="button"
+    class="direct-app-btn"
+    onclick="openAppDirect()">
+    Link Alternatif
+  </button>
+
+  <a
+    class="wa-help"
+    href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Mohon%20bantuannya%20atas%20gangguan%20server%20SIM%20AL-QUR%27AN%20IBS%20RIAU"
+    target="_blank"
+    rel="noopener noreferrer">
+    Bantuan WhatsApp
+  </a>
+</div>
 
       <p class="small-text">
-        Jika internet aktif tetapi aplikasi tetap tidak terbuka, kemungkinan server sedang mengalami gangguan.
-      </p>
+  Jika aplikasi tidak dapat tampil, gunakan
+  <b>Link Alternatif</b> untuk membuka Google Apps Script
+  tanpa iframe.
+</p>
     </div>
   </div>
 
@@ -347,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260709-v19";
+  window.SIM_PWA_VERSION = "20260710-v20";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -356,13 +384,17 @@
     const TEMP_DIRECT_GAS_MODE = false;
 
    let loadTimer = null;
-let iframeLoaded = false;
+let iframeReady = false;
 let currentView = "loading";
+let lastIframeUrl = GAS_URL;
+
+const IFRAME_READY_MESSAGE =
+  "SIM_GAS_IFRAME_READY";
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260709-v19";
+const FORCE_ROUTE_CLEAN_VERSION = "20260710-v20";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -700,7 +732,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260627-v11");
+  clean.set("v", window.SIM_PWA_VERSION || "20260710-v20");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1102,15 +1134,25 @@ function buildIframeUrl(forceReload = false) {
       }
     }
 
-    function startLoadTimer() {
-      clearLoadTimer();
+  function startLoadTimer() {
+  clearLoadTimer();
 
-      loadTimer = setTimeout(function () {
-        if (!iframeLoaded && navigator.onLine) {
-          setView("server");
-        }
-      }, LOAD_TIMEOUT_MS);
+  loadTimer = setTimeout(function () {
+    /*
+     * Jangan mengandalkan event iframe.load.
+     * Aplikasi dianggap berhasil hanya setelah
+     * menerima handshake dari halaman Apps Script.
+     */
+    if (!iframeReady && navigator.onLine) {
+      console.warn(
+        "Handshake Apps Script tidak diterima. " +
+        "Menampilkan tombol akses langsung."
+      );
+
+      setView("server");
     }
+  }, LOAD_TIMEOUT_MS);
+}
 
    function loadApp(forceReload = false) {
   const finalUrl = buildIframeUrl(forceReload);
@@ -1136,7 +1178,7 @@ function buildIframeUrl(forceReload = false) {
   const hasOpenedBefore =
     localStorage.getItem(HAS_OPENED_KEY) === "1";
 
-  iframeLoaded = false;
+iframeReady = false;
 
   if (hasOpenedBefore) {
     setView("app");
@@ -1154,7 +1196,8 @@ function buildIframeUrl(forceReload = false) {
     "publickey-credentials-get *;"
   );
 
-  iframe.src = finalUrl;
+  lastIframeUrl = finalUrl;
+iframe.src = lastIframeUrl;
 }
 
     function retryApp() {
@@ -1166,6 +1209,58 @@ function buildIframeUrl(forceReload = false) {
       loadApp(true);
     }
 
+    function openAppDirect() {
+  if (!navigator.onLine) {
+    setView("offline");
+    return;
+  }
+
+  let directUrl =
+    lastIframeUrl ||
+    buildIframeUrl(true);
+
+  try {
+    const parsedUrl =
+      new URL(directUrl);
+
+    parsedUrl.searchParams.set(
+      "_direct",
+      Date.now().toString()
+    );
+
+    directUrl =
+      parsedUrl.toString();
+  } catch (err) {
+    console.warn(
+      "Gagal menambahkan cache buster direct:",
+      err
+    );
+  }
+
+  /*
+   * Dari PWA, URL di luar scope biasanya akan
+   * dibuka melalui browser atau custom tab.
+   */
+  const directWindow =
+    window.open(
+      directUrl,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+  /*
+   * Fallback jika browser memblokir window.open.
+   */
+  if (!directWindow) {
+    window.location.assign(
+      directUrl
+    );
+  }
+}
+
+window.openAppDirect =
+  openAppDirect;
+
     function showOfflineIfNeeded() {
       if (!navigator.onLine) {
         clearLoadTimer();
@@ -1175,43 +1270,126 @@ function buildIframeUrl(forceReload = false) {
 
     const iframe = document.getElementById("app");
 
-iframe.addEventListener("load", function () {
-  const src = iframe.getAttribute("src") || "";
+iframe.addEventListener(
+  "load",
+  function () {
+    const src =
+      iframe.getAttribute("src") || "";
 
-  if (!src || src === "about:blank") return;
+    if (
+      !src ||
+      src === "about:blank"
+    ) {
+      return;
+    }
 
-  iframeLoaded = true;
+    /*
+     * Event load belum membuktikan aplikasi berhasil
+     * dirender. Tunggu pesan READY dari Apps Script.
+     */
+    console.log(
+      "Dokumen iframe selesai dimuat. " +
+      "Menunggu handshake Apps Script..."
+    );
+  }
+);
 
-  // Simpan tanda bahwa aplikasi sudah pernah berhasil terbuka
-  localStorage.setItem(HAS_OPENED_KEY, "1");
+   iframe.addEventListener("error", function () {
+  if (navigator.onLine) {
+    clearLoadTimer();
+    setView("server");
+  } else {
+    clearLoadTimer();
+    setView("offline");
+  }
+});
 
-  const currentParams = new URLSearchParams(window.location.search);
+/* =========================================
+   HANDSHAKE DARI GOOGLE APPS SCRIPT
+   Tempel mulai dari sini
+========================================= */
 
-  // Jangan simpan route publik seperti laporanToken/raporToken.
-  // Kalau disimpan, PWA HP akan terus membuka halaman verifikasi.
-  if (!simIsPublicRouteParams(currentParams) && simIsStandalonePwa()) {
-    simSaveLastRouteFromParams(currentParams);
+function isAllowedAppsScriptOrigin(origin) {
+  const value = String(origin || "");
+
+  if (value === "https://script.google.com") {
+    return true;
+  }
+
+  return /^https:\/\/([a-z0-9-]+\.)*googleusercontent\.com$/i
+    .test(value);
+}
+
+function markIframeAsReady() {
+  if (iframeReady) {
+    return;
+  }
+
+  iframeReady = true;
+
+  localStorage.setItem(
+    HAS_OPENED_KEY,
+    "1"
+  );
+
+  const currentParams =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  if (
+    !simIsPublicRouteParams(currentParams) &&
+    simIsStandalonePwa()
+  ) {
+    simSaveLastRouteFromParams(
+      currentParams
+    );
   }
 
   clearLoadTimer();
   setView("app");
 
-  // Tampilkan modal saran download PWA saat dibuka dari browser mobile.
+  console.log(
+    "Handshake Apps Script diterima. " +
+    "Iframe dinyatakan siap."
+  );
+
   simSchedulePwaInstallPromptAfterLogin();
-});
+}
 
-    iframe.addEventListener("error", function () {
-      if (navigator.onLine) {
-        clearLoadTimer();
-        setView("server");
-      } else {
-        clearLoadTimer();
-        setView("offline");
-      }
-    });
+window.addEventListener(
+  "message",
+  function (event) {
+    if (
+      !isAllowedAppsScriptOrigin(
+        event.origin
+      )
+    ) {
+      return;
+    }
 
-    loadApp();
-    showOfflineIfNeeded();
+    const data =
+      event.data || {};
+
+    if (
+      data.type !==
+        IFRAME_READY_MESSAGE ||
+      data.app !==
+        "SIM_ALQURAN_IBS"
+    ) {
+      return;
+    }
+
+    markIframeAsReady();
+  }
+);
+
+/* =========================================
+   HANDSHAKE SELESAI
+========================================= */
+
+loadApp();
+showOfflineIfNeeded();
 
     let simWasHiddenAt = 0;
 
@@ -1228,7 +1406,11 @@ document.addEventListener("visibilitychange", function () {
     // Cukup tampilkan kembali app jika iframe masih ada.
     const iframe = document.getElementById("app");
 
-    if (iframe && iframe.getAttribute("src")) {
+   if (
+  iframe &&
+  iframe.getAttribute("src") &&
+  iframeReady
+) {
       clearLoadTimer();
       setView("app");
       return;
@@ -1244,12 +1426,32 @@ document.addEventListener("visibilitychange", function () {
 
 window.addEventListener("pageshow", function (event) {
   // Jika halaman kembali dari bfcache / resume Android,
-  // jangan paksa reload. Cukup tampilkan iframe yang sudah ada.
+  // tampilkan iframe hanya jika handshake sebelumnya sudah diterima.
   const iframe = document.getElementById("app");
 
-  if (event.persisted && iframe && iframe.getAttribute("src")) {
+  if (
+    event.persisted &&
+    iframe &&
+    iframe.getAttribute("src") &&
+    iframeReady
+  ) {
     clearLoadTimer();
     setView("app");
+    return;
+  }
+
+  /*
+   * Jika halaman kembali tetapi iframe belum dinyatakan siap,
+   * jangan langsung dianggap berhasil.
+   */
+  if (
+    event.persisted &&
+    iframe &&
+    iframe.getAttribute("src") &&
+    !iframeReady
+  ) {
+    setView("loading");
+    startLoadTimer();
   }
 });
 
@@ -1495,7 +1697,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260627-v11");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v20");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
