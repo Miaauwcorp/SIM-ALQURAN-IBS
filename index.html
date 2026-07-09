@@ -353,6 +353,8 @@
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
     const LOAD_TIMEOUT_MS = 15000;
 
+    const TEMP_DIRECT_GAS_MODE = true;
+
    let loadTimer = null;
 let iframeLoaded = false;
 let currentView = "loading";
@@ -391,6 +393,7 @@ let simDeferredPwaInstallPrompt = null;
 const SIM_PWA_INSTALL_SESSION_KEY = "sim_pwa_install_prompt_closed_this_open";
 const SIM_PWA_INSTALLED_KEY = "sim_pwa_installed";
 const SIM_PWA_INSTALL_DELAY_MS = 1800;
+    
 
 function simIsStandalonePwa() {
   return (
@@ -1109,7 +1112,19 @@ function buildIframeUrl(forceReload = false) {
       }, LOAD_TIMEOUT_MS);
     }
 
-    function loadApp(forceReload = false) {
+   function loadApp(forceReload = false) {
+  const finalUrl = buildIframeUrl(forceReload);
+
+  /*
+   * MODE DARURAT:
+   * Buka Apps Script sebagai halaman utama karena layanan
+   * iframe lintas-domain Google sedang bermasalah.
+   */
+  if (TEMP_DIRECT_GAS_MODE) {
+    window.location.replace(finalUrl);
+    return;
+  }
+
   const iframe = document.getElementById("app");
 
   if (!navigator.onLine) {
@@ -1118,12 +1133,11 @@ function buildIframeUrl(forceReload = false) {
     return;
   }
 
-  const hasOpenedBefore = localStorage.getItem(HAS_OPENED_KEY) === "1";
+  const hasOpenedBefore =
+    localStorage.getItem(HAS_OPENED_KEY) === "1";
 
   iframeLoaded = false;
 
-  // Kalau aplikasi pernah berhasil terbuka sebelumnya,
-  // langsung tampilkan iframe, jangan tampilkan halaman loading penuh.
   if (hasOpenedBefore) {
     setView("app");
   } else {
@@ -1132,12 +1146,15 @@ function buildIframeUrl(forceReload = false) {
 
   startLoadTimer();
 
-      iframe.setAttribute(
-  "allow",
-  "fullscreen *; camera *; microphone *; display-capture *; geolocation *; publickey-credentials-create *; publickey-credentials-get *;"
-);
+  iframe.setAttribute(
+    "allow",
+    "fullscreen *; camera *; microphone *; " +
+    "display-capture *; geolocation *; " +
+    "publickey-credentials-create *; " +
+    "publickey-credentials-get *;"
+  );
 
-  iframe.src = buildIframeUrl(forceReload);
+  iframe.src = finalUrl;
 }
 
     function retryApp() {
