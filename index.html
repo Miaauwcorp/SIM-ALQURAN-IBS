@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260710-v20" />
-<link rel="icon" href="./icon-192-v11.png?v=20260710-v20" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v20" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260710-v21" />
+<link rel="icon" href="./icon-192-v11.png?v=20260710-v21" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v21" />
   
   <style>
     html, body {
@@ -784,7 +784,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260710-v20");
+  clean.set("v", window.SIM_PWA_VERSION || "20260710-v21");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1840,7 +1840,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v20");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v21");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
