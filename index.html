@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260710-v20" />
-<link rel="icon" href="./icon-192-v11.png?v=20260710-v20" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v20" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260710-v21" />
+<link rel="icon" href="./icon-192-v11.png?v=20260710-v21" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v21" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260710-v20";
+  window.SIM_PWA_VERSION = "20260710-v21";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -394,7 +394,7 @@ const IFRAME_READY_MESSAGE =
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260710-v20";
+const FORCE_ROUTE_CLEAN_VERSION = "20260710-v21";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -732,7 +732,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260710-v20");
+  clean.set("v", window.SIM_PWA_VERSION || "20260710-v21");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1587,10 +1587,43 @@ window.addEventListener("message", async function (event) {
 }
 
 if (data.type === "SIM_PWA_PUBLIC_ROUTE") {
-  simSaveLastRouteFromMessage({
-    ...data,
-    publicRoute: true
-  });
+  const fromCurrentIframe = !!(
+    iframe &&
+    iframe.contentWindow &&
+    event.source === iframe.contentWindow
+  );
+
+  const allowedOrigin =
+    isAllowedAppsScriptOrigin(
+      event.origin
+    );
+
+  /*
+   * Hanya terima pesan dari iframe Apps Script
+   * yang sedang aktif, bukan dari situs lain.
+   */
+  if (
+    fromCurrentIframe &&
+    allowedOrigin
+  ) {
+    simSaveLastRouteFromMessage({
+      ...data,
+      publicRoute: true
+    });
+
+    /*
+     * Halaman publik sudah berhasil dimuat.
+     * Batalkan timer "Server Sedang Lambat"
+     * dan tampilkan iframe.
+     */
+    markIframeAsReady();
+
+    console.log(
+      "Halaman publik QR berhasil dimuat:",
+      data.routeType || "public"
+    );
+  }
+
   return;
 }
 
@@ -1697,7 +1730,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v20");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v21");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
