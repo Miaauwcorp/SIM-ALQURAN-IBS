@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260710-v21" />
-<link rel="icon" href="./icon-192-v11.png?v=20260710-v21" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v21" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260710-v22" />
+<link rel="icon" href="./icon-192-v11.png?v=20260710-v22" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260710-v22" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260710-v21";
+  window.SIM_PWA_VERSION = "20260710-v22";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -383,10 +383,16 @@
 
     const TEMP_DIRECT_GAS_MODE = false;
 
-   let loadTimer = null;
+  let loadTimer = null;
 let iframeReady = false;
 let currentView = "loading";
 let lastIframeUrl = GAS_URL;
+
+/*
+ * true hanya ketika URL yang dibuka merupakan
+ * link laporan atau rapor publik.
+ */
+let currentIframeIsPublicRoute = false;
 
 const IFRAME_READY_MESSAGE =
   "SIM_GAS_IFRAME_READY";
@@ -394,7 +400,7 @@ const IFRAME_READY_MESSAGE =
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260710-v21";
+const FORCE_ROUTE_CLEAN_VERSION = "20260710-v22";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -732,7 +738,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260710-v21");
+  clean.set("v", window.SIM_PWA_VERSION || "20260710-v22");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1134,18 +1140,24 @@ function buildIframeUrl(forceReload = false) {
       }
     }
 
-  function startLoadTimer() {
+ function startLoadTimer() {
   clearLoadTimer();
+
+  /*
+   * Link laporan dan rapor publik tidak memakai handshake
+   * dan tidak memakai timer peringatan server.
+   */
+  if (currentIframeIsPublicRoute) {
+    return;
+  }
 
   loadTimer = setTimeout(function () {
     /*
-     * Jangan mengandalkan event iframe.load.
-     * Aplikasi dianggap berhasil hanya setelah
-     * menerima handshake dari halaman Apps Script.
+     * Timer handshake hanya berlaku untuk aplikasi utama.
      */
     if (!iframeReady && navigator.onLine) {
       console.warn(
-        "Handshake Apps Script tidak diterima. " +
+        "Handshake aplikasi utama tidak diterima. " +
         "Menampilkan tombol akses langsung."
       );
 
@@ -1154,20 +1166,34 @@ function buildIframeUrl(forceReload = false) {
   }, LOAD_TIMEOUT_MS);
 }
 
-   function loadApp(forceReload = false) {
-  const finalUrl = buildIframeUrl(forceReload);
+ function loadApp(forceReload = false) {
+  const currentParams =
+    new URLSearchParams(
+      window.location.search
+    );
 
   /*
-   * MODE DARURAT:
-   * Buka Apps Script sebagai halaman utama karena layanan
-   * iframe lintas-domain Google sedang bermasalah.
+   * Tandai apakah URL sekarang merupakan
+   * link laporan atau rapor publik.
+   */
+  currentIframeIsPublicRoute =
+    simIsPublicRouteParams(
+      currentParams
+    );
+
+  const finalUrl =
+    buildIframeUrl(forceReload);
+
+  /*
+   * Mode darurat untuk seluruh aplikasi.
    */
   if (TEMP_DIRECT_GAS_MODE) {
     window.location.replace(finalUrl);
     return;
   }
 
-  const iframe = document.getElementById("app");
+  const iframe =
+    document.getElementById("app");
 
   if (!navigator.onLine) {
     clearLoadTimer();
@@ -1175,18 +1201,40 @@ function buildIframeUrl(forceReload = false) {
     return;
   }
 
-  const hasOpenedBefore =
-    localStorage.getItem(HAS_OPENED_KEY) === "1";
+  iframeReady = false;
 
-iframeReady = false;
-
-  if (hasOpenedBefore) {
-    setView("app");
-  } else {
+  if (currentIframeIsPublicRoute) {
+    /*
+     * QR laporan dan rapor:
+     * - tidak menunggu handshake;
+     * - tidak memakai timeout server;
+     * - menunggu event iframe.load biasa.
+     */
+    simClearSavedRoute();
+    clearLoadTimer();
     setView("loading");
-  }
 
-  startLoadTimer();
+    console.log(
+      "Route publik terdeteksi. " +
+      "Handshake dinonaktifkan untuk halaman ini."
+    );
+  } else {
+    /*
+     * Aplikasi utama tetap menggunakan handshake.
+     */
+    const hasOpenedBefore =
+      localStorage.getItem(
+        HAS_OPENED_KEY
+      ) === "1";
+
+    if (hasOpenedBefore) {
+      setView("app");
+    } else {
+      setView("loading");
+    }
+
+    startLoadTimer();
+  }
 
   iframe.setAttribute(
     "allow",
@@ -1197,7 +1245,7 @@ iframeReady = false;
   );
 
   lastIframeUrl = finalUrl;
-iframe.src = lastIframeUrl;
+  iframe.src = lastIframeUrl;
 }
 
     function retryApp() {
@@ -1284,11 +1332,28 @@ iframe.addEventListener(
     }
 
     /*
-     * Event load belum membuktikan aplikasi berhasil
-     * dirender. Tunggu pesan READY dari Apps Script.
+     * Link laporan dan rapor tidak memakai handshake.
+     * Event iframe.load langsung dianggap berhasil.
+     */
+    if (currentIframeIsPublicRoute) {
+      iframeReady = true;
+
+      clearLoadTimer();
+      setView("app");
+
+      console.log(
+        "Halaman laporan/rapor publik selesai dimuat. " +
+        "Tidak menggunakan handshake."
+      );
+
+      return;
+    }
+
+    /*
+     * Aplikasi utama tetap menunggu handshake.
      */
     console.log(
-      "Dokumen iframe selesai dimuat. " +
+      "Dokumen aplikasi utama selesai dimuat. " +
       "Menunggu handshake Apps Script..."
     );
   }
@@ -1586,43 +1651,16 @@ window.addEventListener("message", async function (event) {
   return;
 }
 
-if (data.type === "SIM_PWA_PUBLIC_ROUTE") {
-  const fromCurrentIframe = !!(
-    iframe &&
-    iframe.contentWindow &&
-    event.source === iframe.contentWindow
-  );
-
-  const allowedOrigin =
-    isAllowedAppsScriptOrigin(
-      event.origin
-    );
-
+if (
+  data.type ===
+  "SIM_PWA_PUBLIC_ROUTE"
+) {
   /*
-   * Hanya terima pesan dari iframe Apps Script
-   * yang sedang aktif, bukan dari situs lain.
+   * Halaman publik tidak lagi memerlukan
+   * postMessage atau handshake.
    */
-  if (
-    fromCurrentIframe &&
-    allowedOrigin
-  ) {
-    simSaveLastRouteFromMessage({
-      ...data,
-      publicRoute: true
-    });
-
-    /*
-     * Halaman publik sudah berhasil dimuat.
-     * Batalkan timer "Server Sedang Lambat"
-     * dan tampilkan iframe.
-     */
-    markIframeAsReady();
-
-    console.log(
-      "Halaman publik QR berhasil dimuat:",
-      data.routeType || "public"
-    );
-  }
+  return;
+}
 
   return;
 }
@@ -1730,7 +1768,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v21");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260710-v22");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
