@@ -2001,39 +2001,72 @@ if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
 }
 
  // Login passkey / biometrik
-if (data.type === "SIM_PASSKEY_GET_REQUEST") {
+if (
+  data.type ===
+  "SIM_PASSKEY_GET_REQUEST"
+) {
   try {
-    if (!window.PublicKeyCredential || !navigator.credentials) {
-      throw new Error("Browser belum mendukung WebAuthn/passkey.");
-    }
-
     if (
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+      !window.PublicKeyCredential ||
+      !navigator.credentials ||
+      typeof navigator.credentials.get !==
+        "function"
     ) {
       throw new Error(
-        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
+        "Browser belum mendukung WebAuthn/passkey."
       );
     }
 
-    const credential = await navigator.credentials.get(
-      simPrepareGetOptions(data.payload || {})
+    /*
+     * Langsung panggil WebAuthn agar Face ID
+     * muncul secepat mungkin setelah tombol ditekan.
+     */
+    const credential =
+      await navigator.credentials.get(
+        simPrepareGetOptions(
+          data.payload || {}
+        )
+      );
+
+    simReplyToPasskeyRequester(
+      event,
+      {
+        type:
+          "SIM_PASSKEY_GET_RESULT",
+
+        requestId:
+          data.requestId || "",
+
+        success: true,
+
+        credential:
+          simSerializeCredential(
+            credential
+          )
+      }
     );
 
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_GET_RESULT",
-      requestId: data.requestId || "",
-      success: true,
-      credential: simSerializeCredential(credential)
-    });
   } catch (err) {
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_GET_RESULT",
-      requestId: data.requestId || "",
-      success: false,
-      errorName: err && err.name ? err.name : "Error",
-      errorMessage: err && err.message ? err.message : String(err)
-    });
+    simReplyToPasskeyRequester(
+      event,
+      {
+        type:
+          "SIM_PASSKEY_GET_RESULT",
+
+        requestId:
+          data.requestId || "",
+
+        success: false,
+
+        errorName:
+          err?.name ||
+          "Error",
+
+        errorMessage:
+          err?.message ||
+          String(err)
+      }
+    );
   }
 
   return;
