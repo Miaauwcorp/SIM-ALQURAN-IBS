@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260715-v23" />
-<link rel="icon" href="./icon-192-v11.png?v=20260715-v23" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v23" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260715-v24" />
+<link rel="icon" href="./icon-192-v11.png?v=20260715-v24" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v24" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260715-v23";
+  window.SIM_PWA_VERSION = "20260715-v24";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -400,7 +400,7 @@ const IFRAME_READY_MESSAGE =
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260715-v23";
+const FORCE_ROUTE_CLEAN_VERSION = "20260715-v24";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -784,7 +784,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260715-v23");
+  clean.set("v", window.SIM_PWA_VERSION || "20260715-v24");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1701,9 +1701,15 @@ function simPwaReadContext(payload) {
       SIM_PWA_CTX_KEYS.biometric
     ),
 
-    loginSession: simPwaReadJson(
-      SIM_PWA_CTX_KEYS.loginSession
-    )
+   loginSession: simPwaReadJson(
+  SIM_PWA_CTX_KEYS.loginSession
+),
+
+sessionOpAt: Number(
+  localStorage.getItem(
+    SIM_PWA_CTX_KEYS.sessionOpAt
+  ) || "0"
+)
   };
 }
 
@@ -2143,7 +2149,7 @@ if (
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v23");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v24");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
