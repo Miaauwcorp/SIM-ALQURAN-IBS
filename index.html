@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260715-v24" />
-<link rel="icon" href="./icon-192-v11.png?v=20260715-v24" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v24" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260715-v25" />
+<link rel="icon" href="./icon-192-v11.png?v=20260715-v25" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v25" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260715-v24";
+  window.SIM_PWA_VERSION = "20260715-v25";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -400,7 +400,7 @@ const IFRAME_READY_MESSAGE =
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260715-v24";
+const FORCE_ROUTE_CLEAN_VERSION = "20260715-v25";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -784,7 +784,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260715-v24");
+  clean.set("v", window.SIM_PWA_VERSION || "20260715-v25");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1700,6 +1700,135 @@ function simPrepareGetOptions(options) {
   return { publicKey: publicKey };
 }
 
+    /* =========================================
+   STORAGE AUTH PERSISTEN UNTUK SAFARI / iOS PWA
+   Disimpan di origin wrapper, bukan di iframe Apps Script.
+========================================= */
+
+const SIM_PWA_AUTH_STORAGE_KEYS = new Set([
+  "loginSession",
+  "SIM_MUROJAAH_LOGIN_BROWSER_ID_V1",
+  "SIM_MUROJAAH_BIOMETRIC_LOGIN_V1"
+]);
+
+function simIsMessageFromMainAppIframe(event) {
+  const appFrame = document.getElementById("app");
+
+  return !!(
+    appFrame &&
+    appFrame.contentWindow &&
+    event.source === appFrame.contentWindow &&
+    isAllowedAppsScriptOrigin(event.origin)
+  );
+}
+
+function simReadPersistentAuthValues(requestedKeys) {
+  const result = {};
+
+  const keys = Array.isArray(requestedKeys)
+    ? requestedKeys
+    : Array.from(SIM_PWA_AUTH_STORAGE_KEYS);
+
+  keys.forEach(function (key) {
+    if (!SIM_PWA_AUTH_STORAGE_KEYS.has(key)) return;
+
+    try {
+      result[key] = localStorage.getItem(key);
+    } catch (err) {
+      result[key] = null;
+    }
+  });
+
+  return result;
+}
+
+function simWritePersistentAuthValues(values) {
+  const source =
+    values && typeof values === "object"
+      ? values
+      : {};
+
+  Object.keys(source).forEach(function (key) {
+    if (!SIM_PWA_AUTH_STORAGE_KEYS.has(key)) return;
+
+    try {
+      const value = source[key];
+
+      if (
+        value === null ||
+        value === undefined ||
+        value === ""
+      ) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(
+          key,
+          String(value)
+        );
+      }
+    } catch (err) {
+      console.warn(
+        "Gagal menyimpan auth PWA:",
+        key,
+        err
+      );
+    }
+  });
+}
+
+window.addEventListener("message", function (event) {
+  const data = event.data || {};
+
+  if (
+    data.type !== "SIM_PWA_AUTH_STORAGE_GET_REQUEST" &&
+    data.type !== "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
+  ) {
+    return;
+  }
+
+  /*
+   * Hanya menerima permintaan dari iframe Apps Script utama.
+   * Website atau iframe lain tidak dapat membaca sessionId.
+   */
+  if (!simIsMessageFromMainAppIframe(event)) {
+    return;
+  }
+
+  if (
+    data.type ===
+    "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
+  ) {
+    simWritePersistentAuthValues(data.values);
+
+    event.source.postMessage(
+      {
+        type: "SIM_PWA_AUTH_STORAGE_SET_RESULT",
+        requestId: data.requestId || "",
+        success: true
+      },
+      event.origin
+    );
+
+    return;
+  }
+
+  event.source.postMessage(
+    {
+      type: "SIM_PWA_AUTH_STORAGE_GET_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      values: simReadPersistentAuthValues(
+        data.keys
+      )
+    },
+    event.origin
+  );
+});
+
+/* =========================================
+   STORAGE AUTH PERSISTEN SELESAI
+========================================= */
+
 window.addEventListener("message", async function (event) {
   const data = event.data || {};
   const iframe = document.getElementById("app");
@@ -1840,7 +1969,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v24");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v25");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
