@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260715-v22" />
-<link rel="icon" href="./icon-192-v11.png?v=20260715-v22" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v22" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260715-v23" />
+<link rel="icon" href="./icon-192-v11.png?v=20260715-v23" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v23" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260715-v22";
+  window.SIM_PWA_VERSION = "20260715-v23";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -400,7 +400,7 @@ const IFRAME_READY_MESSAGE =
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260715-v22";
+const FORCE_ROUTE_CLEAN_VERSION = "20260715-v23";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -784,7 +784,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260715-v22");
+  clean.set("v", window.SIM_PWA_VERSION || "20260715-v23");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1609,6 +1609,7 @@ const SIM_PWA_CTX_KEYS = {
   installationId: "sim_pwa_installation_id_v1",
   deviceId: "sim_pwa_device_id_v1",
   clientId: "sim_pwa_client_id_v1",
+  sessionOpAt:  "sim_pwa_login_session_op_at_v1",
   biometric: "sim_pwa_biometric_login_v1",
   loginSession: "sim_pwa_login_session_v1"
 };
@@ -1707,7 +1708,8 @@ function simPwaReadContext(payload) {
 }
 
 function simPwaSaveContext(payload) {
-  const data = payload || {};
+  const data =
+    payload || {};
 
   if (data.clearBiometric === true) {
     localStorage.removeItem(
@@ -1717,20 +1719,72 @@ function simPwaSaveContext(payload) {
   } else if (data.biometric) {
     localStorage.setItem(
       SIM_PWA_CTX_KEYS.biometric,
-      JSON.stringify(data.biometric)
+      JSON.stringify(
+        data.biometric
+      )
     );
   }
 
-  if (data.clearLoginSession === true) {
-    localStorage.removeItem(
-      SIM_PWA_CTX_KEYS.loginSession
-    );
+  const hasSessionOperation =
+    data.clearLoginSession === true ||
+    !!data.loginSession;
 
-  } else if (data.loginSession) {
-    localStorage.setItem(
-      SIM_PWA_CTX_KEYS.loginSession,
-      JSON.stringify(data.loginSession)
-    );
+  if (hasSessionOperation) {
+    const incomingOpAt =
+      Number(
+        data.sessionOpAt ||
+        Date.now()
+      );
+
+    const savedOpAt =
+      Number(
+        localStorage.getItem(
+          SIM_PWA_CTX_KEYS.sessionOpAt
+        ) || "0"
+      );
+
+    /*
+     * Operasi lama tidak boleh menimpa operasi baru.
+     */
+    if (incomingOpAt >= savedOpAt) {
+      if (
+        data.clearLoginSession ===
+        true
+      ) {
+        localStorage.removeItem(
+          SIM_PWA_CTX_KEYS
+            .loginSession
+        );
+
+      } else if (
+        data.loginSession
+      ) {
+        localStorage.setItem(
+          SIM_PWA_CTX_KEYS
+            .loginSession,
+
+          JSON.stringify(
+            data.loginSession
+          )
+        );
+      }
+
+      localStorage.setItem(
+        SIM_PWA_CTX_KEYS.sessionOpAt,
+        String(incomingOpAt)
+      );
+    } else {
+      console.warn(
+        "Operasi sesi lama diabaikan:",
+        {
+          incomingOpAt:
+            incomingOpAt,
+
+          savedOpAt:
+            savedOpAt
+        }
+      );
+    }
   }
 
   return simPwaReadContext({});
@@ -2089,7 +2143,7 @@ if (
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v22");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v23");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
