@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260715-v25" />
-<link rel="icon" href="./icon-192-v11.png?v=20260715-v25" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260715-v25" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260717-v26" />
+<link rel="icon" href="./icon-192-v11.png?v=20260717-v26" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260717-v26" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260715-v25";
+  window.SIM_PWA_VERSION = "20260717-v26";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -399,8 +399,46 @@ const IFRAME_READY_MESSAGE =
 
 const HAS_OPENED_KEY = "sim_murojaah_has_opened";
 
+    /*
+ * Token sementara untuk mengamankan komunikasi penyimpanan
+ * antara wrapper PWA dan halaman Google Apps Script.
+ *
+ * Token selalu berubah setiap wrapper dibuka, sehingga
+ * iframe lain tidak dapat membaca session dari localStorage PWA.
+ */
+const SIM_AUTH_BRIDGE_TOKEN = (function () {
+  try {
+    const bytes = new Uint32Array(4);
+
+    if (
+      window.crypto &&
+      typeof window.crypto.getRandomValues === "function"
+    ) {
+      window.crypto.getRandomValues(bytes);
+
+      return Array.from(bytes)
+        .map(function (value) {
+          return value.toString(36);
+        })
+        .join("-");
+    }
+  } catch (err) {
+    console.warn(
+      "Gagal membuat token bridge dengan crypto:",
+      err
+    );
+  }
+
+  return (
+    "sim-auth-" +
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2)
+  );
+})();
+
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260715-v25";
+const FORCE_ROUTE_CLEAN_VERSION = "20260717-v26";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -614,7 +652,8 @@ const SIM_INTERNAL_ROUTE_KEYS = new Set([
   "bioV",
   "_reload",
   "_open",
-  "v"
+  "v",
+  "authBridgeToken"
 ]);
 
 const SIM_BLOCKED_ROUTE_KEYS = new Set([
@@ -653,7 +692,12 @@ function simCleanRouteParams(params, options = {}) {
       if (!allowedPublicToken) return;
     }
 
-    if (k === "_reload") return;
+if (
+  k === "_reload" ||
+  k === "authBridgeToken"
+) {
+  return;
+}
 
     clean.set(k, v);
   });
@@ -784,7 +828,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260715-v25");
+  clean.set("v", window.SIM_PWA_VERSION || "20260717-v26");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -1019,13 +1063,14 @@ function buildIframeUrl(forceReload = false) {
      * Parameter internal wrapper tidak perlu
      * masuk ke Apps Script.
      */
-    if (
-      cleanKey === "_reload" ||
-      cleanKey === "_open" ||
-      cleanKey === "v"
-    ) {
-      return;
-    }
+  if (
+  cleanKey === "_reload" ||
+  cleanKey === "_open" ||
+  cleanKey === "v" ||
+  cleanKey === "authBridgeToken"
+) {
+  return;
+}
 
     /*
      * Mendukung URL seperti:
@@ -1140,6 +1185,15 @@ function buildIframeUrl(forceReload = false) {
   }
 
   iframeParams.set("bioV", "3");
+
+  /*
+ * Token hanya diteruskan ke iframe aktif.
+ * Token ini tidak disimpan sebagai route.
+ */
+iframeParams.set(
+  "authBridgeToken",
+  SIM_AUTH_BRIDGE_TOKEN
+);
 
   /*
    * Cache buster khusus tombol Coba Lagi.
@@ -1524,9 +1578,6 @@ window.addEventListener(
    HANDSHAKE SELESAI
 ========================================= */
 
-loadApp();
-showOfflineIfNeeded();
-
     let simWasHiddenAt = 0;
 
 document.addEventListener("visibilitychange", function () {
@@ -1700,9 +1751,9 @@ function simPrepareGetOptions(options) {
   return { publicKey: publicKey };
 }
 
-    /* =========================================
+  /* =========================================
    STORAGE AUTH PERSISTEN UNTUK SAFARI / iOS PWA
-   Disimpan di origin wrapper, bukan di iframe Apps Script.
+   Data disimpan pada origin wrapper PWA.
 ========================================= */
 
 const SIM_PWA_AUTH_STORAGE_KEYS = new Set([
@@ -1711,30 +1762,84 @@ const SIM_PWA_AUTH_STORAGE_KEYS = new Set([
   "SIM_MUROJAAH_BIOMETRIC_LOGIN_V1"
 ]);
 
-function simIsMessageFromMainAppIframe(event) {
-  const appFrame = document.getElementById("app");
+/*
+ * Apps Script dapat memakai iframe bertingkat.
+ * Karena itu event.source tidak selalu sama persis dengan
+ * appFrame.contentWindow.
+ *
+ * Keamanan tetap dijaga menggunakan:
+ * 1. Origin harus berasal dari Apps Script/googleusercontent.
+ * 2. Token harus sama dengan token iframe aktif.
+ */
+function simIsValidPersistentAuthRequest(
+  event,
+  data
+) {
+  if (
+    !event ||
+    !data ||
+    !event.source ||
+    typeof event.source.postMessage !==
+      "function"
+  ) {
+    return false;
+  }
 
-  return !!(
-    appFrame &&
-    appFrame.contentWindow &&
-    event.source === appFrame.contentWindow &&
-    isAllowedAppsScriptOrigin(event.origin)
-  );
+  if (
+    !isAllowedAppsScriptOrigin(
+      event.origin
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    !SIM_AUTH_BRIDGE_TOKEN ||
+    data.bridgeToken !==
+      SIM_AUTH_BRIDGE_TOKEN
+  ) {
+    console.warn(
+      "Pesan auth PWA ditolak karena token tidak sesuai."
+    );
+
+    return false;
+  }
+
+  return true;
 }
 
-function simReadPersistentAuthValues(requestedKeys) {
+function simReadPersistentAuthValues(
+  requestedKeys
+) {
   const result = {};
 
-  const keys = Array.isArray(requestedKeys)
+  const keys = Array.isArray(
+    requestedKeys
+  )
     ? requestedKeys
-    : Array.from(SIM_PWA_AUTH_STORAGE_KEYS);
+    : Array.from(
+        SIM_PWA_AUTH_STORAGE_KEYS
+      );
 
   keys.forEach(function (key) {
-    if (!SIM_PWA_AUTH_STORAGE_KEYS.has(key)) return;
+    if (
+      !SIM_PWA_AUTH_STORAGE_KEYS.has(
+        key
+      )
+    ) {
+      return;
+    }
 
     try {
-      result[key] = localStorage.getItem(key);
+      result[key] =
+        localStorage.getItem(key);
     } catch (err) {
+      console.warn(
+        "Gagal membaca auth PWA:",
+        key,
+        err
+      );
+
       result[key] = null;
     }
   });
@@ -1742,92 +1847,212 @@ function simReadPersistentAuthValues(requestedKeys) {
   return result;
 }
 
-function simWritePersistentAuthValues(values) {
+function simWritePersistentAuthValues(
+  values
+) {
   const source =
-    values && typeof values === "object"
+    values &&
+    typeof values === "object"
       ? values
       : {};
 
-  Object.keys(source).forEach(function (key) {
-    if (!SIM_PWA_AUTH_STORAGE_KEYS.has(key)) return;
+  const failedKeys = [];
 
-    try {
-      const value = source[key];
-
+  Object.keys(source).forEach(
+    function (key) {
       if (
-        value === null ||
-        value === undefined ||
-        value === ""
+        !SIM_PWA_AUTH_STORAGE_KEYS.has(
+          key
+        )
       ) {
-        localStorage.removeItem(key);
-      } else {
+        return;
+      }
+
+      try {
+        const value = source[key];
+
+        if (
+          value === null ||
+          value === undefined ||
+          value === ""
+        ) {
+          localStorage.removeItem(key);
+
+          if (
+            localStorage.getItem(key) !==
+            null
+          ) {
+            failedKeys.push(key);
+          }
+
+          return;
+        }
+
+        const serializedValue =
+          String(value);
+
         localStorage.setItem(
           key,
-          String(value)
+          serializedValue
         );
+
+        /*
+         * Baca kembali untuk memastikan Safari
+         * benar-benar menerima penyimpanan.
+         */
+        if (
+          localStorage.getItem(key) !==
+          serializedValue
+        ) {
+          failedKeys.push(key);
+        }
+      } catch (err) {
+        console.warn(
+          "Gagal menyimpan auth PWA:",
+          key,
+          err
+        );
+
+        failedKeys.push(key);
       }
-    } catch (err) {
-      console.warn(
-        "Gagal menyimpan auth PWA:",
-        key,
-        err
-      );
     }
-  });
+  );
+
+  return {
+    success: failedKeys.length === 0,
+    failedKeys: failedKeys
+  };
 }
 
-window.addEventListener("message", function (event) {
-  const data = event.data || {};
-
+function simReplyPersistentAuth(
+  event,
+  payload
+) {
   if (
-    data.type !== "SIM_PWA_AUTH_STORAGE_GET_REQUEST" &&
-    data.type !== "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
+    !event ||
+    !event.source ||
+    typeof event.source.postMessage !==
+      "function"
   ) {
     return;
   }
 
-  /*
-   * Hanya menerima permintaan dari iframe Apps Script utama.
-   * Website atau iframe lain tidak dapat membaca sessionId.
-   */
-  if (!simIsMessageFromMainAppIframe(event)) {
-    return;
-  }
+  const response = Object.assign(
+    {},
+    payload || {},
+    {
+      bridgeToken:
+        SIM_AUTH_BRIDGE_TOKEN
+    }
+  );
 
-  if (
-    data.type ===
-    "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
-  ) {
-    simWritePersistentAuthValues(data.values);
-
+  try {
     event.source.postMessage(
-      {
-        type: "SIM_PWA_AUTH_STORAGE_SET_RESULT",
-        requestId: data.requestId || "",
-        success: true
-      },
+      response,
       event.origin
     );
-
-    return;
+  } catch (err) {
+    /*
+     * Fallback hanya dipakai apabila Safari
+     * menolak targetOrigin karena perubahan
+     * origin iframe internal Apps Script.
+     */
+    try {
+      event.source.postMessage(
+        response,
+        "*"
+      );
+    } catch (fallbackErr) {
+      console.warn(
+        "Gagal membalas bridge auth PWA:",
+        fallbackErr
+      );
+    }
   }
+}
 
-  event.source.postMessage(
-    {
-      type: "SIM_PWA_AUTH_STORAGE_GET_RESULT",
-      requestId: data.requestId || "",
-      success: true,
-      values: simReadPersistentAuthValues(
-        data.keys
+window.addEventListener(
+  "message",
+  function (event) {
+    const data = event.data || {};
+
+    if (
+      data.type !==
+        "SIM_PWA_AUTH_STORAGE_GET_REQUEST" &&
+      data.type !==
+        "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
+    ) {
+      return;
+    }
+
+    if (
+      !simIsValidPersistentAuthRequest(
+        event,
+        data
       )
-    },
-    event.origin
-  );
-});
+    ) {
+      return;
+    }
+
+    if (
+      data.type ===
+      "SIM_PWA_AUTH_STORAGE_SET_REQUEST"
+    ) {
+      const writeResult =
+        simWritePersistentAuthValues(
+          data.values
+        );
+
+      simReplyPersistentAuth(
+        event,
+        {
+          type:
+            "SIM_PWA_AUTH_STORAGE_SET_RESULT",
+
+          requestId:
+            data.requestId || "",
+
+          success:
+            writeResult.success,
+
+          failedKeys:
+            writeResult.failedKeys
+        }
+      );
+
+      return;
+    }
+
+    simReplyPersistentAuth(
+      event,
+      {
+        type:
+          "SIM_PWA_AUTH_STORAGE_GET_RESULT",
+
+        requestId:
+          data.requestId || "",
+
+        success: true,
+
+        values:
+          simReadPersistentAuthValues(
+            data.keys
+          )
+      }
+    );
+  }
+);
 
 /* =========================================
    STORAGE AUTH PERSISTEN SELESAI
 ========================================= */
+
+/*
+ * Iframe baru dimuat setelah listener storage aktif.
+ * Ini mencegah request pertama terlewat pada Safari.
+ */
+loadApp();
+showOfflineIfNeeded();
 
 window.addEventListener("message", async function (event) {
   const data = event.data || {};
@@ -1969,7 +2194,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260715-v25");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260717-v26");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
