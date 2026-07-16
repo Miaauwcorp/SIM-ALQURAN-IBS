@@ -1603,223 +1603,6 @@ window.addEventListener("pageshow", function (event) {
       showOfflineIfNeeded();
     });
 
-    /* ===== PATCH IDENTITAS PERMANEN PWA iOS ===== */
-
-const SIM_PWA_CTX_KEYS = {
-  installationId: "sim_pwa_installation_id_v1",
-  deviceId: "sim_pwa_device_id_v1",
-  clientId: "sim_pwa_client_id_v1",
-  sessionOpAt:  "sim_pwa_login_session_op_at_v1",
-  biometric: "sim_pwa_biometric_login_v1",
-  loginSession: "sim_pwa_login_session_v1"
-};
-
-function simPwaCreateId(prefix) {
-  let id = "";
-
-  try {
-    id = crypto.randomUUID().replace(/-/g, "");
-  } catch (err) {
-    id =
-      Math.random().toString(36).slice(2) +
-      Date.now().toString(36);
-  }
-
-  return prefix + id;
-}
-
-function simPwaGetOrCreate(key, prefix) {
-  let value = String(
-    localStorage.getItem(key) || ""
-  ).trim();
-
-  if (!value) {
-    value = simPwaCreateId(prefix);
-    localStorage.setItem(key, value);
-  }
-
-  return value;
-}
-
-function simPwaReadJson(key) {
-  try {
-    return JSON.parse(
-      localStorage.getItem(key) || "null"
-    );
-  } catch (err) {
-    return null;
-  }
-}
-
-/*
- * Migrasikan Client ID lama dari Apps Script.
- * Ini mencegah perangkat langsung dianggap perangkat baru
- * setelah patch pertama kali dipasang.
- */
-function simPwaSeedOldClientId(payload) {
-  const seed = String(
-    payload?.clientIdSeed || ""
-  ).trim();
-
-  const old = String(
-    localStorage.getItem(
-      SIM_PWA_CTX_KEYS.clientId
-    ) || ""
-  ).trim();
-
-  if (
-    !old &&
-    /^CID-[A-Za-z0-9_-]{6,}$/i.test(seed)
-  ) {
-    localStorage.setItem(
-      SIM_PWA_CTX_KEYS.clientId,
-      seed
-    );
-  }
-}
-
-function simPwaReadContext(payload) {
-  simPwaSeedOldClientId(payload || {});
-
-  return {
-    installationId: simPwaGetOrCreate(
-      SIM_PWA_CTX_KEYS.installationId,
-      "IID-"
-    ),
-
-    deviceId: simPwaGetOrCreate(
-      SIM_PWA_CTX_KEYS.deviceId,
-      "DID-"
-    ),
-
-    clientId: simPwaGetOrCreate(
-      SIM_PWA_CTX_KEYS.clientId,
-      "CID-"
-    ),
-
-    biometric: simPwaReadJson(
-      SIM_PWA_CTX_KEYS.biometric
-    ),
-
-   loginSession: simPwaReadJson(
-  SIM_PWA_CTX_KEYS.loginSession
-),
-
-sessionOpAt: Number(
-  localStorage.getItem(
-    SIM_PWA_CTX_KEYS.sessionOpAt
-  ) || "0"
-)
-  };
-}
-
-function simPwaSaveContext(payload) {
-  const data =
-    payload || {};
-
-  if (data.clearBiometric === true) {
-    localStorage.removeItem(
-      SIM_PWA_CTX_KEYS.biometric
-    );
-
-  } else if (data.biometric) {
-    localStorage.setItem(
-      SIM_PWA_CTX_KEYS.biometric,
-      JSON.stringify(
-        data.biometric
-      )
-    );
-  }
-
-  const hasSessionOperation =
-    data.clearLoginSession === true ||
-    !!data.loginSession;
-
-  if (hasSessionOperation) {
-    const incomingOpAt =
-      Number(
-        data.sessionOpAt ||
-        Date.now()
-      );
-
-    const savedOpAt =
-      Number(
-        localStorage.getItem(
-          SIM_PWA_CTX_KEYS.sessionOpAt
-        ) || "0"
-      );
-
-    /*
-     * Operasi lama tidak boleh menimpa operasi baru.
-     */
-    if (incomingOpAt >= savedOpAt) {
-      if (
-        data.clearLoginSession ===
-        true
-      ) {
-        localStorage.removeItem(
-          SIM_PWA_CTX_KEYS
-            .loginSession
-        );
-
-      } else if (
-        data.loginSession
-      ) {
-        localStorage.setItem(
-          SIM_PWA_CTX_KEYS
-            .loginSession,
-
-          JSON.stringify(
-            data.loginSession
-          )
-        );
-      }
-
-      localStorage.setItem(
-        SIM_PWA_CTX_KEYS.sessionOpAt,
-        String(incomingOpAt)
-      );
-    } else {
-      console.warn(
-        "Operasi sesi lama diabaikan:",
-        {
-          incomingOpAt:
-            incomingOpAt,
-
-          savedOpAt:
-            savedOpAt
-        }
-      );
-    }
-  }
-
-  return simPwaReadContext({});
-}
-
-/*
- * Hanya menerima perintah dari iframe Apps Script utama.
- */
-function simPwaMessageFromApp(event) {
-  const iframe =
-    document.getElementById("app");
-
-  return !!(
-    iframe?.contentWindow &&
-    event.source === iframe.contentWindow
-  );
-}
-
-function simPwaReply(event, payload) {
-  if (event?.source?.postMessage) {
-    event.source.postMessage(
-      payload,
-      "*"
-    );
-  }
-}
-
-/* ===== AKHIR PATCH IDENTITAS PWA ===== */
-
    function simBufferToBase64Url(buffer) {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -1923,65 +1706,6 @@ window.addEventListener("message", async function (event) {
 
   if (!data || !data.type) return;
 
-  /*
- * Bridge identitas perangkat, biometrik,
- * dan sesi login dari iframe menuju wrapper PWA.
- */
-if (
-  data.type === "SIM_CLIENT_CONTEXT_REQUEST" ||
-  data.type === "SIM_CLIENT_CONTEXT_SAVE"
-) {
-  if (!simPwaMessageFromApp(event)) {
-    return;
-  }
-
-  try {
-    const saved =
-      data.type ===
-      "SIM_CLIENT_CONTEXT_SAVE";
-
-    const payload = saved
-      ? simPwaSaveContext(
-          data.payload || {}
-        )
-      : simPwaReadContext(
-          data.payload || {}
-        );
-
-    simPwaReply(event, {
-      type: saved
-        ? "SIM_CLIENT_CONTEXT_SAVE_RESULT"
-        : "SIM_CLIENT_CONTEXT_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: true,
-      payload: payload
-    });
-
-  } catch (err) {
-    simPwaReply(event, {
-      type:
-        data.type ===
-        "SIM_CLIENT_CONTEXT_SAVE"
-          ? "SIM_CLIENT_CONTEXT_SAVE_RESULT"
-          : "SIM_CLIENT_CONTEXT_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: false,
-
-      errorMessage:
-        err?.message ||
-        String(err)
-    });
-  }
-
-  return;
-}
-
     if (
     data.type === "SIM_LOGIN_PAGE_READY" ||
     data.type === "SIM_PWA_INSTALL_PROMPT_REQUEST"
@@ -2061,72 +1785,39 @@ if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
 }
 
  // Login passkey / biometrik
-if (
-  data.type ===
-  "SIM_PASSKEY_GET_REQUEST"
-) {
+if (data.type === "SIM_PASSKEY_GET_REQUEST") {
   try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      throw new Error("Browser belum mendukung WebAuthn/passkey.");
+    }
+
     if (
-      !window.PublicKeyCredential ||
-      !navigator.credentials ||
-      typeof navigator.credentials.get !==
-        "function"
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
     ) {
       throw new Error(
-        "Browser belum mendukung WebAuthn/passkey."
+        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
       );
     }
 
-    /*
-     * Langsung panggil WebAuthn agar Face ID
-     * muncul secepat mungkin setelah tombol ditekan.
-     */
-    const credential =
-      await navigator.credentials.get(
-        simPrepareGetOptions(
-          data.payload || {}
-        )
-      );
-
-    simReplyToPasskeyRequester(
-      event,
-      {
-        type:
-          "SIM_PASSKEY_GET_RESULT",
-
-        requestId:
-          data.requestId || "",
-
-        success: true,
-
-        credential:
-          simSerializeCredential(
-            credential
-          )
-      }
+    const credential = await navigator.credentials.get(
+      simPrepareGetOptions(data.payload || {})
     );
 
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      credential: simSerializeCredential(credential)
+    });
   } catch (err) {
-    simReplyToPasskeyRequester(
-      event,
-      {
-        type:
-          "SIM_PASSKEY_GET_RESULT",
-
-        requestId:
-          data.requestId || "",
-
-        success: false,
-
-        errorName:
-          err?.name ||
-          "Error",
-
-        errorMessage:
-          err?.message ||
-          String(err)
-      }
-    );
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: false,
+      errorName: err && err.name ? err.name : "Error",
+      errorMessage: err && err.message ? err.message : String(err)
+    });
   }
 
   return;
