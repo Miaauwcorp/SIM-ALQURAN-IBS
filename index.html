@@ -2099,228 +2099,83 @@ if (data.type === "SIM_PWA_PUBLIC_ROUTE") {
     return;
   }
 
-    /*
-   * =====================================================
-   * WEBAUTHN / FACE ID PWA
-   * =====================================================
-   */
+ // Daftar passkey / biometrik
+if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
+  try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      throw new Error("Browser belum mendukung WebAuthn/passkey.");
+    }
 
-  if (
-    data.type ===
-    "SIM_PASSKEY_CREATE_REQUEST"
-  ) {
-    try {
-      if (!window.isSecureContext) {
-        throw new Error(
-          "Face ID hanya dapat digunakan melalui HTTPS."
-        );
-      }
-
-      if (
-        !window.PublicKeyCredential ||
-        !navigator.credentials ||
-        typeof navigator.credentials.create !==
-          "function"
-      ) {
-        throw new Error(
-          "Safari pada perangkat ini belum menyediakan WebAuthn/passkey."
-        );
-      }
-
-      const createOptions =
-        simPrepareCreateOptions(
-          data.payload || {}
-        );
-
-      /*
-       * Gunakan pengaturan yang lebih sesuai
-       * untuk passkey iPhone dan Face ID.
-       */
-      createOptions.publicKey
-        .authenticatorSelection = {
-          ...(
-            createOptions
-              .publicKey
-              .authenticatorSelection ||
-            {}
-          ),
-
-          authenticatorAttachment:
-            "platform",
-
-          residentKey:
-            "preferred",
-
-          requireResidentKey:
-            false,
-
-          userVerification:
-            "required"
-        };
-
-      const credential =
-        await navigator.credentials.create(
-          createOptions
-        );
-
-      if (!credential) {
-        throw new Error(
-          "Pendaftaran Face ID dibatalkan."
-        );
-      }
-
-      simReplyToPasskeyRequester(
-        event,
-        {
-          type:
-            "SIM_PASSKEY_CREATE_RESULT",
-
-          requestId:
-            data.requestId || "",
-
-          success:
-            true,
-
-          credential:
-            simSerializeCredential(
-              credential
-            )
-        }
-      );
-
-    } catch (err) {
-      console.error(
-        "Pendaftaran Face ID gagal:",
-        err
-      );
-
-      simReplyToPasskeyRequester(
-        event,
-        {
-          type:
-            "SIM_PASSKEY_CREATE_RESULT",
-
-          requestId:
-            data.requestId || "",
-
-          success:
-            false,
-
-          errorName:
-            (
-              err &&
-              err.name
-            ) ||
-            "UnknownError",
-
-          errorMessage:
-            (
-              err &&
-              err.message
-            ) ||
-            "Safari menolak pendaftaran Face ID."
-        }
+    if (
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+    ) {
+      throw new Error(
+        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
       );
     }
 
-    return;
+    const credential = await navigator.credentials.create(
+      simPrepareCreateOptions(data.payload || {})
+    );
+
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_CREATE_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      credential: simSerializeCredential(credential)
+    });
+  } catch (err) {
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_CREATE_RESULT",
+      requestId: data.requestId || "",
+      success: false,
+      errorName: err && err.name ? err.name : "Error",
+      errorMessage: err && err.message ? err.message : String(err)
+    });
   }
 
+  return;
+}
 
-  if (
-    data.type ===
-    "SIM_PASSKEY_GET_REQUEST"
-  ) {
-    try {
-      if (!window.isSecureContext) {
-        throw new Error(
-          "Face ID hanya dapat digunakan melalui HTTPS."
-        );
-      }
+ // Login passkey / biometrik
+if (data.type === "SIM_PASSKEY_GET_REQUEST") {
+  try {
+    if (!window.PublicKeyCredential || !navigator.credentials) {
+      throw new Error("Browser belum mendukung WebAuthn/passkey.");
+    }
 
-      if (
-        !window.PublicKeyCredential ||
-        !navigator.credentials ||
-        typeof navigator.credentials.get !==
-          "function"
-      ) {
-        throw new Error(
-          "Safari pada perangkat ini belum menyediakan WebAuthn/passkey."
-        );
-      }
-
-      const getOptions =
-        simPrepareGetOptions(
-          data.payload || {}
-        );
-
-      const credential =
-        await navigator.credentials.get(
-          getOptions
-        );
-
-      if (!credential) {
-        throw new Error(
-          "Verifikasi Face ID dibatalkan."
-        );
-      }
-
-      simReplyToPasskeyRequester(
-        event,
-        {
-          type:
-            "SIM_PASSKEY_GET_RESULT",
-
-          requestId:
-            data.requestId || "",
-
-          success:
-            true,
-
-          credential:
-            simSerializeCredential(
-              credential
-            )
-        }
-      );
-
-    } catch (err) {
-      console.error(
-        "Login Face ID gagal:",
-        err
-      );
-
-      simReplyToPasskeyRequester(
-        event,
-        {
-          type:
-            "SIM_PASSKEY_GET_RESULT",
-
-          requestId:
-            data.requestId || "",
-
-          success:
-            false,
-
-          errorName:
-            (
-              err &&
-              err.name
-            ) ||
-            "UnknownError",
-
-          errorMessage:
-            (
-              err &&
-              err.message
-            ) ||
-            "Safari menolak verifikasi Face ID."
-        }
+    if (
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+    ) {
+      throw new Error(
+        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
       );
     }
 
-    return;
+    const credential = await navigator.credentials.get(
+      simPrepareGetOptions(data.payload || {})
+    );
+
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: true,
+      credential: simSerializeCredential(credential)
+    });
+  } catch (err) {
+    simReplyToPasskeyRequester(event, {
+      type: "SIM_PASSKEY_GET_RESULT",
+      requestId: data.requestId || "",
+      success: false,
+      errorName: err && err.name ? err.name : "Error",
+      errorMessage: err && err.message ? err.message : String(err)
+    });
   }
+
+  return;
+}
 });
 
    if ("serviceWorker" in navigator) {
