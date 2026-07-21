@@ -2106,14 +2106,83 @@ if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
       throw new Error("Browser belum mendukung WebAuthn/passkey.");
     }
 
+   // Daftar passkey / biometrik
+if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
+  try {
     if (
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+      !window.PublicKeyCredential ||
+      !navigator.credentials ||
+      typeof navigator.credentials.create !== "function"
     ) {
       throw new Error(
-        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
+        "Browser belum mendukung WebAuthn/passkey."
       );
     }
+
+    /*
+     * Jangan blokir Safari berdasarkan
+     * isUserVerifyingPlatformAuthenticatorAvailable().
+     *
+     * Langsung coba navigator.credentials.create()
+     * agar Safari menampilkan Face ID/passkey.
+     */
+    const credential =
+      await navigator.credentials.create(
+        simPrepareCreateOptions(
+          data.payload || {}
+        )
+      );
+
+    if (!credential) {
+      throw new Error(
+        "Pendaftaran biometrik dibatalkan."
+      );
+    }
+
+    simReplyToPasskeyRequester(event, {
+      type:
+        "SIM_PASSKEY_CREATE_RESULT",
+
+      requestId:
+        data.requestId || "",
+
+      success: true,
+
+      credential:
+        simSerializeCredential(
+          credential
+        )
+    });
+
+  } catch (err) {
+    console.error(
+      "Pendaftaran biometrik gagal:",
+      err
+    );
+
+    simReplyToPasskeyRequester(event, {
+      type:
+        "SIM_PASSKEY_CREATE_RESULT",
+
+      requestId:
+        data.requestId || "",
+
+      success: false,
+
+      errorName:
+        err && err.name
+          ? err.name
+          : "Error",
+
+      errorMessage:
+        err && err.message
+          ? err.message
+          : String(err)
+    });
+  }
+
+  return;
+}
 
     const credential = await navigator.credentials.create(
       simPrepareCreateOptions(data.payload || {})
@@ -2145,14 +2214,82 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
       throw new Error("Browser belum mendukung WebAuthn/passkey.");
     }
 
+   // Login passkey / biometrik
+if (data.type === "SIM_PASSKEY_GET_REQUEST") {
+  try {
     if (
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-      !(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())
+      !window.PublicKeyCredential ||
+      !navigator.credentials ||
+      typeof navigator.credentials.get !== "function"
     ) {
       throw new Error(
-        "Biometrik internal perangkat tidak tersedia. Aktifkan fingerprint/face unlock dan kunci layar HP terlebih dahulu."
+        "Browser belum mendukung WebAuthn/passkey."
       );
     }
+
+    /*
+     * Jangan blokir Safari berdasarkan hasil
+     * pengecekan platform authenticator.
+     *
+     * Langsung minta autentikasi.
+     */
+    const credential =
+      await navigator.credentials.get(
+        simPrepareGetOptions(
+          data.payload || {}
+        )
+      );
+
+    if (!credential) {
+      throw new Error(
+        "Verifikasi biometrik dibatalkan."
+      );
+    }
+
+    simReplyToPasskeyRequester(event, {
+      type:
+        "SIM_PASSKEY_GET_RESULT",
+
+      requestId:
+        data.requestId || "",
+
+      success: true,
+
+      credential:
+        simSerializeCredential(
+          credential
+        )
+    });
+
+  } catch (err) {
+    console.error(
+      "Login biometrik gagal:",
+      err
+    );
+
+    simReplyToPasskeyRequester(event, {
+      type:
+        "SIM_PASSKEY_GET_RESULT",
+
+      requestId:
+        data.requestId || "",
+
+      success: false,
+
+      errorName:
+        err && err.name
+          ? err.name
+          : "Error",
+
+      errorMessage:
+        err && err.message
+          ? err.message
+          : String(err)
+    });
+  }
+
+  return;
+}
 
     const credential = await navigator.credentials.get(
       simPrepareGetOptions(data.payload || {})
