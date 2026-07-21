@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260721-v27" />
-<link rel="icon" href="./icon-192-v11.png?v=20260721-v27" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260721-v27" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260721-v28" />
+<link rel="icon" href="./icon-192-v11.png?v=20260721-v28" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260721-v28" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-  window.SIM_PWA_VERSION = "20260721-v27";
+  window.SIM_PWA_VERSION = "20260721-v28";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -438,7 +438,7 @@ const SIM_AUTH_BRIDGE_TOKEN = (function () {
 })();
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260721-v27";
+const FORCE_ROUTE_CLEAN_VERSION = "20260721-v28";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -828,7 +828,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260721-v27");
+  clean.set("v", window.SIM_PWA_VERSION || "20260721-v28");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -2099,220 +2099,228 @@ if (data.type === "SIM_PWA_PUBLIC_ROUTE") {
     return;
   }
 
- // Daftar passkey / biometrik
-if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
-  try {
-    if (!window.PublicKeyCredential || !navigator.credentials) {
-      throw new Error("Browser belum mendukung WebAuthn/passkey.");
-    }
-
-   // Daftar passkey / biometrik
-if (data.type === "SIM_PASSKEY_CREATE_REQUEST") {
-  try {
-    if (
-      !window.PublicKeyCredential ||
-      !navigator.credentials ||
-      typeof navigator.credentials.create !== "function"
-    ) {
-      throw new Error(
-        "Browser belum mendukung WebAuthn/passkey."
-      );
-    }
-
     /*
-     * Jangan blokir Safari berdasarkan
-     * isUserVerifyingPlatformAuthenticatorAvailable().
-     *
-     * Langsung coba navigator.credentials.create()
-     * agar Safari menampilkan Face ID/passkey.
-     */
-    const credential =
-      await navigator.credentials.create(
+   * =====================================================
+   * WEBAUTHN / FACE ID PWA
+   * =====================================================
+   */
+
+  if (
+    data.type ===
+    "SIM_PASSKEY_CREATE_REQUEST"
+  ) {
+    try {
+      if (!window.isSecureContext) {
+        throw new Error(
+          "Face ID hanya dapat digunakan melalui HTTPS."
+        );
+      }
+
+      if (
+        !window.PublicKeyCredential ||
+        !navigator.credentials ||
+        typeof navigator.credentials.create !==
+          "function"
+      ) {
+        throw new Error(
+          "Safari pada perangkat ini belum menyediakan WebAuthn/passkey."
+        );
+      }
+
+      const createOptions =
         simPrepareCreateOptions(
           data.payload || {}
-        )
+        );
+
+      /*
+       * Gunakan pengaturan yang lebih sesuai
+       * untuk passkey iPhone dan Face ID.
+       */
+      createOptions.publicKey
+        .authenticatorSelection = {
+          ...(
+            createOptions
+              .publicKey
+              .authenticatorSelection ||
+            {}
+          ),
+
+          authenticatorAttachment:
+            "platform",
+
+          residentKey:
+            "preferred",
+
+          requireResidentKey:
+            false,
+
+          userVerification:
+            "required"
+        };
+
+      const credential =
+        await navigator.credentials.create(
+          createOptions
+        );
+
+      if (!credential) {
+        throw new Error(
+          "Pendaftaran Face ID dibatalkan."
+        );
+      }
+
+      simReplyToPasskeyRequester(
+        event,
+        {
+          type:
+            "SIM_PASSKEY_CREATE_RESULT",
+
+          requestId:
+            data.requestId || "",
+
+          success:
+            true,
+
+          credential:
+            simSerializeCredential(
+              credential
+            )
+        }
       );
 
-    if (!credential) {
-      throw new Error(
-        "Pendaftaran biometrik dibatalkan."
+    } catch (err) {
+      console.error(
+        "Pendaftaran Face ID gagal:",
+        err
+      );
+
+      simReplyToPasskeyRequester(
+        event,
+        {
+          type:
+            "SIM_PASSKEY_CREATE_RESULT",
+
+          requestId:
+            data.requestId || "",
+
+          success:
+            false,
+
+          errorName:
+            (
+              err &&
+              err.name
+            ) ||
+            "UnknownError",
+
+          errorMessage:
+            (
+              err &&
+              err.message
+            ) ||
+            "Safari menolak pendaftaran Face ID."
+        }
       );
     }
 
-    simReplyToPasskeyRequester(event, {
-      type:
-        "SIM_PASSKEY_CREATE_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: true,
-
-      credential:
-        simSerializeCredential(
-          credential
-        )
-    });
-
-  } catch (err) {
-    console.error(
-      "Pendaftaran biometrik gagal:",
-      err
-    );
-
-    simReplyToPasskeyRequester(event, {
-      type:
-        "SIM_PASSKEY_CREATE_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: false,
-
-      errorName:
-        err && err.name
-          ? err.name
-          : "Error",
-
-      errorMessage:
-        err && err.message
-          ? err.message
-          : String(err)
-    });
+    return;
   }
 
-  return;
-}
 
-    const credential = await navigator.credentials.create(
-      simPrepareCreateOptions(data.payload || {})
-    );
+  if (
+    data.type ===
+    "SIM_PASSKEY_GET_REQUEST"
+  ) {
+    try {
+      if (!window.isSecureContext) {
+        throw new Error(
+          "Face ID hanya dapat digunakan melalui HTTPS."
+        );
+      }
 
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_CREATE_RESULT",
-      requestId: data.requestId || "",
-      success: true,
-      credential: simSerializeCredential(credential)
-    });
-  } catch (err) {
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_CREATE_RESULT",
-      requestId: data.requestId || "",
-      success: false,
-      errorName: err && err.name ? err.name : "Error",
-      errorMessage: err && err.message ? err.message : String(err)
-    });
-  }
+      if (
+        !window.PublicKeyCredential ||
+        !navigator.credentials ||
+        typeof navigator.credentials.get !==
+          "function"
+      ) {
+        throw new Error(
+          "Safari pada perangkat ini belum menyediakan WebAuthn/passkey."
+        );
+      }
 
-  return;
-}
-
- // Login passkey / biometrik
-if (data.type === "SIM_PASSKEY_GET_REQUEST") {
-  try {
-    if (!window.PublicKeyCredential || !navigator.credentials) {
-      throw new Error("Browser belum mendukung WebAuthn/passkey.");
-    }
-
-   // Login passkey / biometrik
-if (data.type === "SIM_PASSKEY_GET_REQUEST") {
-  try {
-    if (
-      !window.PublicKeyCredential ||
-      !navigator.credentials ||
-      typeof navigator.credentials.get !== "function"
-    ) {
-      throw new Error(
-        "Browser belum mendukung WebAuthn/passkey."
-      );
-    }
-
-    /*
-     * Jangan blokir Safari berdasarkan hasil
-     * pengecekan platform authenticator.
-     *
-     * Langsung minta autentikasi.
-     */
-    const credential =
-      await navigator.credentials.get(
+      const getOptions =
         simPrepareGetOptions(
           data.payload || {}
-        )
+        );
+
+      const credential =
+        await navigator.credentials.get(
+          getOptions
+        );
+
+      if (!credential) {
+        throw new Error(
+          "Verifikasi Face ID dibatalkan."
+        );
+      }
+
+      simReplyToPasskeyRequester(
+        event,
+        {
+          type:
+            "SIM_PASSKEY_GET_RESULT",
+
+          requestId:
+            data.requestId || "",
+
+          success:
+            true,
+
+          credential:
+            simSerializeCredential(
+              credential
+            )
+        }
       );
 
-    if (!credential) {
-      throw new Error(
-        "Verifikasi biometrik dibatalkan."
+    } catch (err) {
+      console.error(
+        "Login Face ID gagal:",
+        err
+      );
+
+      simReplyToPasskeyRequester(
+        event,
+        {
+          type:
+            "SIM_PASSKEY_GET_RESULT",
+
+          requestId:
+            data.requestId || "",
+
+          success:
+            false,
+
+          errorName:
+            (
+              err &&
+              err.name
+            ) ||
+            "UnknownError",
+
+          errorMessage:
+            (
+              err &&
+              err.message
+            ) ||
+            "Safari menolak verifikasi Face ID."
+        }
       );
     }
 
-    simReplyToPasskeyRequester(event, {
-      type:
-        "SIM_PASSKEY_GET_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: true,
-
-      credential:
-        simSerializeCredential(
-          credential
-        )
-    });
-
-  } catch (err) {
-    console.error(
-      "Login biometrik gagal:",
-      err
-    );
-
-    simReplyToPasskeyRequester(event, {
-      type:
-        "SIM_PASSKEY_GET_RESULT",
-
-      requestId:
-        data.requestId || "",
-
-      success: false,
-
-      errorName:
-        err && err.name
-          ? err.name
-          : "Error",
-
-      errorMessage:
-        err && err.message
-          ? err.message
-          : String(err)
-    });
+    return;
   }
-
-  return;
-}
-
-    const credential = await navigator.credentials.get(
-      simPrepareGetOptions(data.payload || {})
-    );
-
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_GET_RESULT",
-      requestId: data.requestId || "",
-      success: true,
-      credential: simSerializeCredential(credential)
-    });
-  } catch (err) {
-    simReplyToPasskeyRequester(event, {
-      type: "SIM_PASSKEY_GET_RESULT",
-      requestId: data.requestId || "",
-      success: false,
-      errorName: err && err.name ? err.name : "Error",
-      errorMessage: err && err.message ? err.message : String(err)
-    });
-  }
-
-  return;
-}
 });
 
    if ("serviceWorker" in navigator) {
@@ -2331,7 +2339,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260721-v27");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260721-v28");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
