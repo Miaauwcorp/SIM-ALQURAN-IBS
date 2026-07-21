@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="SIM MUROJAAH IBS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
- <link rel="manifest" href="./manifest.webmanifest?v=20260722-v30" />
-<link rel="icon" href="./icon-192-v11.png?v=20260722-v30" />
-<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260722-v30" />
+ <link rel="manifest" href="./manifest.webmanifest?v=20260722-v31" />
+<link rel="icon" href="./icon-192-v11.png?v=20260722-v31" />
+<link rel="apple-touch-icon" href="./icon-192-v11.png?v=20260722-v31" />
   
   <style>
     html, body {
@@ -375,7 +375,7 @@
 </div>
 
   <script>
-window.SIM_PWA_VERSION = "20260722-v30";
+window.SIM_PWA_VERSION = "20260722-v31";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
@@ -438,7 +438,7 @@ const SIM_AUTH_BRIDGE_TOKEN = (function () {
 })();
 
     const FORCE_ROUTE_CLEAN_VERSION_KEY = "sim_route_clean_version";
-const FORCE_ROUTE_CLEAN_VERSION = "20260722-v30";
+const FORCE_ROUTE_CLEAN_VERSION = "20260722-v31";
 
 (function forceCleanBadPublicRouteOnce() {
   try {
@@ -828,7 +828,7 @@ function simApplyLastRouteToOuterUrl(params, options = {}) {
     clean.set("source", "pwa");
   }
 
-  clean.set("v", window.SIM_PWA_VERSION || "20260722-v30");
+  clean.set("v", window.SIM_PWA_VERSION || "20260722-v31");
 
   const nextUrl = window.location.pathname + "?" + clean.toString();
 
@@ -2194,7 +2194,7 @@ if (data.type === "SIM_PASSKEY_GET_REQUEST") {
 
   window.addEventListener("load", function () {
     const swUrl =
-      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260722-v30");
+      "./sw.js?v=" + encodeURIComponent(window.SIM_PWA_VERSION || "20260722-v31");
 
     navigator.serviceWorker.register(swUrl, {
       updateViaCache: "none"
