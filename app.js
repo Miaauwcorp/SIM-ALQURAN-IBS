@@ -10,7 +10,7 @@ import {
    KONFIGURASI FIREBASE
 ========================= */
 
-const PWA_VERSION = window.SIM_PWA_VERSION || "20260715-v23";
+const PWA_VERSION = window.SIM_PWA_VERSION || "20260722-v29";
 const PWA_ICON = "./icon-192-v11.png?v=" + encodeURIComponent(PWA_VERSION);
 
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
