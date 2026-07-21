@@ -376,56 +376,6 @@
 
   <script>
 window.SIM_PWA_VERSION = "20260722-v30";
-
-/* =========================================
-   ORIENTASI MENGIKUTI PENGATURAN HP
-========================================= */
-
-function simUseDeviceOrientationSetting() {
-  try {
-    /*
-     * Lepaskan penguncian orientasi dari aplikasi.
-     * Setelah dilepas, portrait/landscape akan mengikuti
-     * pengaturan Rotasi Otomatis pada HP pengguna.
-     */
-    if (
-      screen.orientation &&
-      typeof screen.orientation.unlock === "function"
-    ) {
-      screen.orientation.unlock();
-    }
-  } catch (err) {
-    /*
-     * Safari/iPhone mungkin tidak mendukung orientation.unlock().
-     * Tidak perlu menampilkan error karena iOS akan mengikuti
-     * pengaturan orientasi sistem secara otomatis.
-     */
-    console.log(
-      "Orientasi mengikuti pengaturan perangkat."
-    );
-  }
-}
-
-window.addEventListener(
-  "load",
-  simUseDeviceOrientationSetting
-);
-
-window.addEventListener(
-  "pageshow",
-  simUseDeviceOrientationSetting
-);
-
-document.addEventListener(
-  "visibilitychange",
-  function () {
-    if (
-      document.visibilityState === "visible"
-    ) {
-      simUseDeviceOrientationSetting();
-    }
-  }
-);
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
 
     // Jika iframe tidak berhasil terbuka dalam waktu ini, tampilkan halaman server bermasalah
