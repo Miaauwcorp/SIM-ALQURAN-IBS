@@ -2141,6 +2141,112 @@ window.addEventListener("message", async function (event) {
 
   if (!data || !data.type) return;
 
+  /*
+ * =========================================
+ * NAVIGASI RAPOR PUBLIK DARI APPS SCRIPT
+ * =========================================
+ *
+ * Apps Script iframe tidak boleh melakukan
+ * window.top.location.href secara langsung
+ * karena dibatasi sandbox browser.
+ *
+ * Apps Script cukup mengirim postMessage,
+ * kemudian wrapper GitHub yang melakukan
+ * navigasi top-level.
+ */
+if (
+  data.type ===
+    "SIM_PWA_PUBLIC_NAVIGATE"
+) {
+
+  /*
+   * Hanya terima pesan yang benar-benar
+   * berasal dari Google Apps Script.
+   */
+  if (
+    !isAllowedAppsScriptOrigin(
+      event.origin
+    )
+  ) {
+    console.warn(
+      "Navigasi rapor ditolak. Origin tidak valid:",
+      event.origin
+    );
+
+    return;
+  }
+
+
+  try {
+
+    const targetUrl =
+      new URL(
+        String(
+          data.url || ""
+        ),
+        window.location.href
+      );
+
+
+    /*
+     * Demi keamanan:
+     * URL tujuan harus tetap menuju
+     * GitHub Pages aplikasi ini.
+     */
+    if (
+      targetUrl.origin !==
+      window.location.origin
+    ) {
+
+      console.warn(
+        "Navigasi rapor ditolak. Origin tujuan tidak sesuai:",
+        targetUrl.origin
+      );
+
+      return;
+    }
+
+
+    /*
+     * Harus merupakan route rapor.
+     */
+    if (
+      !targetUrl.searchParams.has(
+        "raporToken"
+      )
+    ) {
+
+      console.warn(
+        "Navigasi rapor ditolak karena raporToken tidak ada."
+      );
+
+      return;
+    }
+
+
+    /*
+     * GitHub wrapper adalah top-level page,
+     * sehingga navigasi ini tidak terkena
+     * sandbox Apps Script.
+     */
+    window.location.assign(
+      targetUrl.toString()
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "Gagal membuka rapor:",
+      err
+    );
+
+  }
+
+
+  return;
+}
+
     if (
     data.type === "SIM_LOGIN_PAGE_READY" ||
     data.type === "SIM_PWA_INSTALL_PROMPT_REQUEST"
