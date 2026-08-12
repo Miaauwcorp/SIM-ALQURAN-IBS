@@ -676,7 +676,18 @@ function simCleanRouteParams(params, options = {}) {
     const k = String(key || "").trim();
     const v = value == null ? "" : String(value).trim();
 
-    if (!k || !v) return;
+  /*
+ * Parameter ?raporToken tanpa value tetap valid
+ * untuk membuka Portal Rapor Santri.
+ */
+if (!k) return;
+
+if (
+  !v &&
+  k !== "raporToken"
+) {
+  return;
+}
 
     // Untuk route publik verifikasi dokumen, token boleh disimpan.
     // Untuk route login/OAuth tetap diblokir.
@@ -707,9 +718,29 @@ if (
 
 function simHasMeaningfulRouteParams(params) {
   for (const [key, value] of params.entries()) {
-    if (SIM_INTERNAL_ROUTE_KEYS.has(key)) continue;
 
-    if (String(value || "").trim() !== "") {
+    if (
+      SIM_INTERNAL_ROUTE_KEYS.has(key)
+    ) {
+      continue;
+    }
+
+    /*
+     * ?raporToken
+     * tetap merupakan route valid
+     * walaupun nilainya kosong.
+     */
+    if (
+      key === "raporToken"
+    ) {
+      return true;
+    }
+
+    if (
+      String(
+        value || ""
+      ).trim() !== ""
+    ) {
       return true;
     }
   }
@@ -751,14 +782,38 @@ function simGetSavedRouteParams() {
   return params;
 }
 
-   function simIsPublicRouteParams(params) {
-  const p = params instanceof URLSearchParams
-    ? params
-    : new URLSearchParams(params || "");
+function simIsPublicRouteParams(params) {
 
+  const p =
+    params instanceof URLSearchParams
+      ? params
+      : new URLSearchParams(
+          params || ""
+        );
+
+  /*
+   * Rapor:
+   *
+   * ?raporToken
+   * ?raporToken=
+   * ?raporToken=ABC123
+   *
+   * semuanya route publik.
+   */
+  if (
+    p.has("raporToken")
+  ) {
+    return true;
+  }
+
+  /*
+   * Laporan tetap memakai
+   * mekanisme lama.
+   */
   return (
-    String(p.get("laporanToken") || "").trim() !== "" ||
-    String(p.get("raporToken") || "").trim() !== ""
+    String(
+      p.get("laporanToken") || ""
+    ).trim() !== ""
   );
 }
 
@@ -1104,16 +1159,42 @@ function buildIframeUrl(forceReload = false) {
       return;
     }
 
-    /*
-     * Parameter normal:
-     * page, nama, source, tglAwal, tglAkhir, dan lainnya.
-     */
-    if (cleanValue !== "") {
-      iframeParams.set(
-        cleanKey,
-        cleanValue
-      );
-    }
+/*
+ * =====================================================
+ * PORTAL RAPOR TANPA TOKEN
+ * =====================================================
+ *
+ * ?raporToken
+ *
+ * wajib tetap diteruskan ke Google Apps Script
+ * walaupun value kosong.
+ */
+if (
+  cleanKey === "raporToken"
+) {
+
+  iframeParams.set(
+    "raporToken",
+    cleanValue
+  );
+
+  return;
+}
+
+
+/*
+ * Parameter normal:
+ * page, nama, source, tglAwal, tglAkhir, dll.
+ */
+if (
+  cleanValue !== ""
+) {
+
+  iframeParams.set(
+    cleanKey,
+    cleanValue
+  );
+}
   });
 
   /*
