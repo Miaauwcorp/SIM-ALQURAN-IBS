@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Forum SIM Al-Qur'an IBS Riau - Wadah Diskusi & Murojaah</title>
+  
+  <meta name="description" content="Forum Diskusi SIM Al-Qur'an Islamic Boarding School (IBS) Riau. Tempat musyawarah tahsin, murojaah, tadabbur Al-Qur'an, dan tanya jawab asatidz." />
+  <meta name="theme-color" content="#15803d" />
+
+  <!-- Google Fonts: Plus Jakarta Sans & Amiri (Arab) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              950: '#052e16'
+            },
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            arabic: ['"Amiri"', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .font-arabic {
+      font-family: 'Amiri', serif;
+      direction: rtl;
+      text-align: right;
+      line-height: 2.2;
+    }
+    .arabic-inline {
+      font-family: 'Amiri', serif;
+      font-size: 1.25em;
+      direction: rtl;
+    }
+    .bg-pattern {
+      background-color: #15803d;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    /* Animation pulse dot */
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+    .pulse-dot {
+      animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 selection:bg-brand-100 selection:text-brand-900">
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20 gap-3">
+        
+        <!-- Logo & Branding -->
+        <a href="#home" onclick="renderForumApp();" class="flex items-center gap-3 group flex-shrink-0">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-900 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-700/20 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-quran text-lg sm:text-xl text-gold-400"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-base sm:text-lg tracking-tight text-slate-900">FORUM SIM AL-QUR'AN</span>
+              <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 hidden sm:inline-block">IBS RIAU</span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">Islamic Boarding School Riau • Halaqah & Diskusi Ilmiah</p>
+          </div>
+        </a>
+
+        <!-- Global Search Bar -->
+        <div class="hidden md:flex flex-1 max-w-md mx-4">
+          <div class="relative w-full">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+              <i class="fa-solid fa-magnifying-glass text-sm"></i>
+            </span>
+            <input 
+              type="text" 
+              id="topSearchInput" 
+              placeholder="Cari topik tahsin, tajwid, hadits, atau nama asatidz..." 
+              oninput="handleSearch(this.value)"
+              class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 border border-transparent rounded-full focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all placeholder:text-slate-400"
+            />
+            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons & User Profile -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Server Status Indicator -->
+          <button 
+            type="button" 
+            onclick="openServerSettingsModal()" 
+            title="Klik untuk cek/ubah status koneksi Google Apps Script" 
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition"
+          >
+            <span id="serverStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+            <span id="serverStatusText" class="hidden sm:inline">GAS Server</span>
+          </button>
+
+          <!-- Button Buat Diskusi Baru -->
+          <button 
+            type="button" 
+            onclick="openNewThreadModal()" 
+            class="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-700/20 active:scale-95 transition"
+          >
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span class="hidden xs:inline">Buat Diskusi</span>
+          </button>
+
+          <!-- User Profile / Login Area -->
+          <div id="userNavArea">
+            <!-- Will be populated dynamically via renderUserNav() -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO BANNER ================= -->
+  <section class="bg-pattern text-white py-8 sm:py-12 relative overflow-hidden">
+    <!-- Decorative background glow -->
+    <div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-gold-500/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-semibold text-gold-400 mb-4">
+          <i class="fa-solid fa-moon"></i>
+          <span>Majelis Digital Al-Qur'an & Hadits IBS Riau</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight mb-3">
+          Ruang Musyawarah Penghafal Al-Qur'an & Asatidz
+        </h1>
+        <p class="text-emerald-100 text-sm sm:text-base leading-relaxed mb-6 font-light">
+          Wadah interaktif bertanya seputar hukum tajwid, menyelaraskan mutqin murojaah, tadabbur ayat, serta pengumuman resmi halaqah tahfidz.
+        </p>
+
+        <!-- Hadits Quote Banner -->
+        <div class="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs sm:text-sm">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-gold-500/20 text-gold-400 flex items-center justify-center flex-shrink-0 text-sm">
+              <i class="fa-solid fa-quote-left"></i>
+            </span>
+            <div>
+              <p class="font-arabic text-base sm:text-lg text-emerald-50 mb-0.5">خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ</p>
+              <p class="text-emerald-200 text-xs">"Sebaik-baik kalian adalah orang yang mempelajari Al-Qur'an dan mengajarkannya." <span class="text-gold-300 font-medium">(HR. Bukhari)</span></p>
+            </div>
+          </div>
+          <a href="#panduan" onclick="openPanduanAdab();" class="text-xs font-semibold text-gold-300 hover:text-white flex items-center gap-1 flex-shrink-0">
+            Adab Majelis <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- ================= SIDEBAR (Kiri) ================= -->
+      <aside class="lg:col-span-3 space-y-6">
+        
+        <!-- Kategori Box -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+            <span>Kategori Diskusi</span>
+            <i class="fa-solid fa-layer-group text-slate-300"></i>
+          </h2>
+          <nav id="categoryNav" class="space-y-1">
+            <!-- Populated via renderCategories() -->
+          </nav>
+        </div>
+
+        <!-- Statistik Ringkas -->
+        <div class="bg-gradient-to-br from-brand-900 to-brand-800 rounded-2xl p-5 text-white shadow-md shadow-brand-900/10">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-300 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-simple"></i>
+            <span>Statistik Majelis</span>
+          </h3>
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-3 rounded-xl bg-white/10 backdrop-blur-xs">
+              <span id="statTotalThreads" class="block text-xl font-extrabold text-white">0</span>
+              <span class="text-[11px] text-emerald-200">Diskusi</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/10 backdrop-blur-xs">
+              <span id="statTotalReplies" class="block text-xl font-extrabold text-gold-400">0</span>
+              <span class="text-[11px] text-emerald-200">Balasan</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/10 backdrop-blur-xs">
+              <span id="statSolvedThreads" class="block text-xl font-extrabold text-emerald-300">0</span>
+              <span class="text-[11px] text-emerald-200">Terjawab</span>
+            </div>
+            <div class="p-3 rounded-xl bg-white/10 backdrop-blur-xs">
+              <span id="statActiveUsers" class="block text-xl font-extrabold text-white">0</span>
+              <span class="text-[11px] text-emerald-200">Pengguna</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adab Diskusi Card -->
+        <div class="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-4 sm:p-5">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-200/70 text-amber-800 flex items-center justify-center flex-shrink-0 text-sm">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wide mb-1">Adab Penuntut Ilmu</h4>
+              <p class="text-xs text-amber-800/90 leading-relaxed">
+                Muliakan guru dan sesama santri. Awali setiap pertanyaan dengan salam dan sertakan rujukan ayat atau riwayat yang shahih.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ================= CONTENT AREA (Kanan) ================= -->
+      <section class="lg:col-span-9 space-y-5">
+        
+        <!-- Filter Bar & Active Filter Badges -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm space-y-3">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold scrollbar-none">
+              <button 
+                type="button" 
+                onclick="setFilterTab('all')" 
+                id="tab-all" 
+                class="px-3 py-1.5 rounded-xl whitespace-nowrap bg-brand-700 text-white shadow-xs transition"
+              >
+                Semua Topik
+              </button>
+              <button 
+                type="button" 
+                onclick="setFilterTab('latest')" 
+                id="tab-latest" 
+                class="px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Terkini
+              </button>
+              <button 
+                type="button" 
+                onclick="setFilterTab('popular')" 
+                id="tab-popular" 
+                class="px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                <i class="fa-solid fa-fire mr-1 text-amber-500"></i> Populer
+              </button>
+              <button 
+                type="button" 
+                onclick="setFilterTab('unanswered')" 
+                id="tab-unanswered" 
+                class="px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                <i class="fa-regular fa-circle-question mr-1"></i> Belum Terjawab
+              </button>
+              <button 
+                type="button" 
+                onclick="setFilterTab('pinned')" 
+                id="tab-pinned" 
+                class="px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                <i class="fa-solid fa-thumbtack mr-1 text-brand-600"></i> Disematkan
+              </button>
+            </div>
+
+            <!-- Sorting & Refresh -->
+            <div class="flex items-center justify-between sm:justify-end gap-2 text-xs">
+              <button 
+                type="button" 
+                onclick="refreshForumData(true)" 
+                id="btnRefreshData" 
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold transition"
+                title="Sinkronkan data dengan Google Apps Script"
+              >
+                <i class="fa-solid fa-rotate text-xs"></i>
+                <span class="hidden xs:inline">Segarkan</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Active Search / Category Notification -->
+          <div id="filterInfoBar" class="hidden flex items-center justify-between py-2 px-3 rounded-xl bg-brand-50 border border-brand-200 text-xs text-brand-900">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-filter text-brand-600"></i>
+              <span id="filterInfoText">Menampilkan hasil...</span>
+            </div>
+            <button onclick="resetAllFilters()" class="font-bold text-brand-700 hover:text-brand-900 underline text-xs">Reset Filter</button>
+          </div>
+        </div>
+
+        <!-- Thread List Feed -->
+        <div id="threadsContainer" class="space-y-3.5">
+          <!-- Populated dynamically via renderThreads() -->
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mt-16 bg-white border-t border-slate-200 py-8 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-brand-700 text-gold-400 flex items-center justify-center font-bold text-xs">
+          <i class="fa-solid fa-quran"></i>
+        </div>
+        <div>
+          <span class="font-bold text-slate-800">SIM Al-Qur'an IBS Riau</span> • Forum Komunikasi & Murojaah Santri
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="https://wa.me/62895602258987?text=Assalamualaikum%2C%20Admin%20SIM%20IBS%20Riau" target="_blank" rel="noopener noreferrer" class="hover:text-brand-700 flex items-center gap-1 font-semibold">
+          <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> Bantuan Admin
+        </a>
+        <span>•</span>
+        <button type="button" onclick="openServerSettingsModal()" class="hover:text-slate-800">
+          Koneksi GAS
+        </button>
+        <span>•</span>
+        <span class="text-slate-400">&copy; 2026 IBS Riau</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODAL: DETAIL THREAD & KOMENTAR ================= -->
+  <div id="threadDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white w-full max-w-4xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-2">
+          <button onclick="closeThreadDetailModal()" class="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs transition">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <span id="modalThreadCategoryBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-800">Kategori</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="shareCurrentThread()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span class="hidden sm:inline">Bagikan</span>
+          </button>
+          <button onclick="closeThreadDetailModal()" class="text-slate-400 hover:text-slate-600 p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 sm:p-7 overflow-y-auto space-y-6 flex-1">
+        
+        <!-- Thread Content -->
+        <article class="space-y-4">
+          <h2 id="modalThreadTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug">
+            Judul Diskusi
+          </h2>
+
+          <!-- Author Info Bar -->
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 text-xs">
+            <div class="flex items-center gap-3">
+              <div id="modalThreadAvatar" class="w-10 h-10 rounded-2xl bg-brand-700 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                A
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span id="modalThreadAuthorName" class="font-bold text-slate-900 text-sm">Nama Author</span>
+                  <span id="modalThreadAuthorRole" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">Role</span>
+                </div>
+                <div class="text-slate-400 text-xs flex items-center gap-2 mt-0.5">
+                  <span id="modalThreadTime"><i class="fa-regular fa-clock mr-1"></i> Waktu</span>
+                  <span>•</span>
+                  <span id="modalThreadUsername">@user</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Thread Likes Button -->
+            <button 
+              type="button" 
+              id="modalThreadLikeBtn" 
+              onclick="likeCurrentThread()" 
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition active:scale-95"
+            >
+              <i class="fa-solid fa-heart"></i>
+              <span id="modalThreadLikeCount">0</span>
+            </button>
+          </div>
+
+          <!-- Body Text (supports Markdown-ish / Arabic format) -->
+          <div id="modalThreadBody" class="text-slate-800 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-normal">
+            Isi diskusi lengkap...
+          </div>
+
+          <!-- Tags list -->
+          <div id="modalThreadTags" class="flex flex-wrap gap-1.5 pt-2">
+            <!-- Populated dynamically -->
+          </div>
+        </article>
+
+        <!-- Divider & Replies Header -->
+        <div class="pt-6 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-comments text-brand-600"></i>
+              <span>Tanggapan & Jawaban Asatidz (<span id="modalRepliesCount">0</span>)</span>
+            </h3>
+          </div>
+
+          <!-- Replies List -->
+          <div id="modalRepliesList" class="space-y-3.5 mb-6">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Reply Input Box -->
+          <div id="replyFormContainer" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+            <!-- Populated via renderReplyForm() -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: BUAT DISKUSI BARU ================= -->
+  <div id="newThreadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-brand-700 text-white flex items-center justify-center text-sm">
+            <i class="fa-solid fa-pen-nib"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Buat Diskusi Baru</h3>
+            <p class="text-[11px] text-slate-500">Ajukan pertanyaan atau bagikan faedah ilmu Al-Qur'an</p>
+          </div>
+        </div>
+        <button onclick="closeNewThreadModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="newThreadForm" onsubmit="submitNewThread(event)" class="p-5 sm:p-6 space-y-4">
+        
+        <!-- Kategori & Label -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori Diskusi *</label>
+          <select id="newThreadCategory" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition">
+            <option value="Tahsin & Tajwid">📖 Tahsin & Tajwid Al-Qur'an</option>
+            <option value="Hafalan & Murojaah">🕌 Hafalan & Murojaah Mutqin</option>
+            <option value="Tadabbur Al-Qur'an">📜 Tadabbur & Tafsir Ayat</option>
+            <option value="Hadits Arbain">📚 Hadits Arbain & Sunnah</option>
+            <option value="Tanya Jawab Asatidz">💡 Tanya Jawab Ustadz / Umum</option>
+            <option value="Pengumuman">📢 Pengumuman Resmi IBS Riau</option>
+          </select>
+        </div>
+
+        <!-- Judul -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Judul Topik Diskusi *</label>
+          <input 
+            type="text" 
+            id="newThreadTitle" 
+            required 
+            placeholder="Contoh: Kaidah makhraj huruf Dhod (ض) dan perbedaannya dengan Zho (ظ)" 
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+          />
+        </div>
+
+        <!-- Quick Arabic Format Helpers -->
+        <div class="flex items-center gap-1.5 text-xs text-slate-600 flex-wrap">
+          <span class="font-semibold text-slate-500 mr-1 text-[11px]">Sisipkan Teks Arab:</span>
+          <button type="button" onclick="insertTextToContent('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\n')" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-arabic text-xs">Basmalah</button>
+          <button type="button" onclick="insertTextToContent('السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ\n\n')" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-arabic text-xs">Salam</button>
+          <button type="button" onclick="insertTextToContent('«...»')" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-xs">«Kutipan»</button>
+        </div>
+
+        <!-- Isi Konten -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Isi Pertanyaan / Penjelasan *</label>
+          <textarea 
+            id="newThreadContent" 
+            rows="5" 
+            required 
+            placeholder="Tuliskan uraian lengkap, pertanyaan santri, atau syarah hadits secara runut..." 
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition font-normal"
+          ></textarea>
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kata Kunci / Tag (pisahkan dengan koma)</label>
+          <input 
+            type="text" 
+            id="newThreadTags" 
+            placeholder="Contoh: Makharijul Huruf, Fatihah, Tajwid" 
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+          />
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button 
+            type="button" 
+            onclick="closeNewThreadModal()" 
+            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition"
+          >
+            Batal
+          </button>
+          <button 
+            type="submit" 
+            id="btnSubmitThread" 
+            class="px-5 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-700/20 active:scale-95 transition"
+          >
+            <i class="fa-solid fa-paper-plane mr-1.5"></i> Terbitkan Diskusi
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: LOGIN USER (SUMBER DARI CODE.GS) ================= -->
+  <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Login Header -->
+      <div class="p-6 text-center bg-gradient-to-b from-brand-50 to-white border-b border-slate-100 relative">
+        <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-14 h-14 rounded-2xl bg-brand-700 text-gold-400 flex items-center justify-center text-2xl mx-auto mb-3 shadow-lg shadow-brand-700/20">
+          <i class="fa-solid fa-user-lock"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-slate-900">Masuk ke SIM Al-Qur'an IBS</h3>
+        <p class="text-xs text-slate-500 mt-1">Gunakan akun resmi SIM Murojaah yang terdaftar di sistem IBS</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleUserLogin(event)" class="p-6 space-y-4">
+        <div id="loginAlertBox" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username / ID Santri / Asatidz *</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-regular fa-user text-sm"></i>
+            </span>
+            <input 
+              type="text" 
+              id="loginUsername" 
+              required 
+              placeholder="Contoh: admin / santri_ahmad / muhafizh1" 
+              class="w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password *</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-key text-sm"></i>
+            </span>
+            <input 
+              type="password" 
+              id="loginPassword" 
+              required 
+              placeholder="Masukkan password Anda" 
+              class="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+            />
+            <button type="button" onclick="togglePasswordVisibility('loginPassword')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+              <i class="fa-regular fa-eye text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Demo Profiles helper (Convenient for testing) -->
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+          <p class="font-bold text-slate-600 mb-1.5 flex items-center gap-1">
+            <i class="fa-solid fa-vial text-brand-600"></i> Akun Pengujian Cepat:
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="fillTestAccount('admin', '1234567890')" class="px-2 py-1 rounded bg-white hover:bg-slate-200 border border-slate-300 text-[11px] font-semibold text-slate-700">👑 Admin</button>
+            <button type="button" onclick="fillTestAccount('muhafizh1', '1234567890')" class="px-2 py-1 rounded bg-white hover:bg-slate-200 border border-slate-300 text-[11px] font-semibold text-brand-700">👳 Muhafizh</button>
+            <button type="button" onclick="fillTestAccount('santri1', '1234567890')" class="px-2 py-1 rounded bg-white hover:bg-slate-200 border border-slate-300 text-[11px] font-semibold text-slate-700">🎓 Santri</button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btnLoginSubmit" 
+          class="w-full py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm shadow-md shadow-brand-700/20 active:scale-95 transition"
+        >
+          <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> Masuk Sekarang
+        </button>
+
+        <p class="text-center text-xs text-slate-400 mt-2">
+          Lupa kata sandi? Hubungi admin SIM Al-Qur'an IBS Riau.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: PENGATURAN KONEKSI GAS ================= -->
+  <div id="serverSettingsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-sm">
+            <i class="fa-solid fa-server"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900">Pengaturan Server Google Apps Script</h3>
+        </div>
+        <button onclick="closeServerSettingsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Forum ini mengambil data pengguna dan thread langsung dari Web App Google Apps Script (<code class="bg-slate-100 px-1 py-0.5 rounded text-brand-800 font-semibold">code.gs</code>).
+        </p>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">URL Google Apps Script Deployment</label>
+          <input 
+            type="url" 
+            id="inputGasUrl" 
+            class="w-full px-3 py-2 text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 outline-none transition"
+          />
+        </div>
+
+        <div id="serverPingResult" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <button 
+            type="button" 
+            onclick="testGasServerConnection()" 
+            id="btnTestGas" 
+            class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-satellite-dish"></i> Uji Koneksi Server
+          </button>
+          <button 
+            type="button" 
+            onclick="saveGasServerUrl()" 
+            class="px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-md shadow-brand-700/20 transition"
+          >
+            Simpan & Pakai
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= NOTIFICATION TOAST ================= -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- ================= JAVASCRIPT APPLICATION CODE ================= -->
+  <script>
+    /**
+     * ========================================================
+     * FORUM SIM AL-QUR'AN IBS RIAU - FRONTEND SCRIPT
+     * Terintegrasi dengan code.gs & siap di GitHub Pages
+     * ========================================================
+     */
+
+    // Default URL Google Apps Script Web App
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec";
+    const STORAGE_KEY_GAS_URL = "sim_forum_gas_url_v1";
+    const STORAGE_KEY_SESSION = "sim_forum_current_user_v1";
+    const STORAGE_KEY_LOCAL_THREADS = "sim_forum_threads_cache_v2";
+    const STORAGE_KEY_LOCAL_REPLIES = "sim_forum_replies_cache_v2";
+
+    // Application State
+    let currentGasUrl = localStorage.getItem(STORAGE_KEY_GAS_URL) || DEFAULT_GAS_URL;
+    let currentUser = null; // { username, nama, role, sessionId }
+    let currentCategory = "Semua";
+    let currentTab = "all"; // all, latest, popular, unanswered, pinned
+    let searchQuery = "";
+    let activeThread = null; // Thread object currently open in modal
+
+    let threads = [];
+    let replies = [];
+
+    // Categories definition
+    const CATEGORIES = [
+      { name: "Semua", icon: "fa-border-all", label: "Semua Kategori" },
+      { name: "Tahsin & Tajwid", icon: "fa-book-quran", label: "Tahsin & Tajwid" },
+      { name: "Hafalan & Murojaah", icon: "fa-kaaba", label: "Murojaah & Ziyadah" },
+      { name: "Tadabbur Al-Qur'an", icon: "fa-scroll", label: "Tadabbur & Tafsir" },
+      { name: "Hadits Arbain", icon: "fa-book-open", label: "Hadits Arbain" },
+      { name: "Pengumuman", icon: "fa-bullhorn", label: "Pengumuman IBS" },
+      { name: "Tanya Jawab Asatidz", icon: "fa-comments-question-check", label: "Tanya Jawab Asatidz" }
+    ];
+
+    // Seed Data if localStorage or GAS is empty/offline
+    const SEED_THREADS = [
+      {
+        id: "th-seed-1",
+        title: "Kaidah Makhraj Huruf Dhod (ض) dan Perbedaannya dengan Zho (ظ) dalam Surah Al-Fatihah",
+        category: "Tahsin & Tajwid",
+        content: "Assalamu'alaikum Warahmatullahi Wabarakatuh Asatidz.\n\nMohon pencerahannya mengenai pelafalan huruf Dhod (ض) pada ayat:\n\nغَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ\n\nSebagian santri masih ada yang tertukar antara bunyi Dhod (ض) dengan Zho (ظ) atau Dal tebal. Bagaimanakah penempatan sisi tepi lidah (hafatul lisan) dengan gigi geraham atas yang tepat sesuai riwayat Hafsh 'an 'Ashim? Syukran jazaakumullahu khairan.",
+        authorUsername: "santri1",
+        authorNama: "Muhammad Rayhan (Santri)",
+        authorRole: "user",
+        createdAt: "2026-09-23 08:30:00",
+        likes: 12,
+        repliesCount: 2,
+        isPinned: true,
+        isClosed: false,
+        tags: ["Tahsin", "Makharijul Huruf", "Al-Fatihah", "Hafsh"]
+      },
+      {
+        id: "th-seed-2",
+        title: "Metode Sab'i dan Sabqi untuk Murojaah 5 Juz Per Hari Santri IBS Riau",
+        category: "Hafalan & Murojaah",
+        content: "Bismillah walhamdulillah.\n\nBagi ikhwah santri halaqah tingkat atas yang sedang mengejar target Mutqin 30 Juz sebelum ujian kelulusan, berikut pembagian waktu murojaah harian yang efektif:\n\n1. Sesi Shubuh (Ba'da Shubuh - 06.30): 2 Juz hafalan baru/dekat (Sabqi)\n2. Sesi Ashar: 1.5 Juz hafalan lama\n3. Sesi Ba'da Maghrib & Isya: 1.5 Juz tasmi' berpasangan (Sab'i)\n\nKuncinya adalah istiqomah dan tidak menambah ziyadah jika sabqi hari sebelumnya belum lancar tanpa salah.",
+        authorUsername: "muhafizh1",
+        authorNama: "Ust. Ahmad Syakir Al-Hafizh",
+        authorRole: "muhafizh",
+        createdAt: "2026-09-22 19:15:00",
+        likes: 24,
+        repliesCount: 1,
+        isPinned: true,
+        isClosed: false,
+        tags: ["Murojaah", "Mutqin", "Tips Santri", "IBS"]
+      },
+      {
+        id: "th-seed-3",
+        title: "Tanya Syarah Hadits Arbain No. 1 tentang Ikhlas dalam Menuntut Ilmu Al-Qur'an",
+        category: "Hadits Arbain",
+        content: "Assalamu'alaikum ustadz.\n\nDalam hadits pertama Arbain An-Nawawiyyah:\n\nإِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى\n\nBagaimana kiat seorang santri menjaga kelurusan niat agar tidak merasa riya' atau sum'ah saat memperbagus suara tilawah di depan khalayak tasmi'?",
+        authorUsername: "santri_farhan",
+        authorNama: "Farhan Pratama",
+        authorRole: "user",
+        createdAt: "2026-09-21 14:10:00",
+        likes: 9,
+        repliesCount: 1,
+        isPinned: false,
+        isClosed: false,
+        tags: ["Hadits Arbain", "Niat", "Ikhlas", "Tasmi"]
+      },
+      {
+        id: "th-seed-4",
+        title: "Jadwal Tasmi' Akbar 10 & 30 Juz Sekali Duduk Periode Semester Ganjil",
+        category: "Pengumuman",
+        content: "Assalamu'alaikum Warahmatullahi Wabarakatuh.\n\nDisampaikan kepada seluruh Santri dan Wali Santri SIM Al-Qur'an IBS Riau, bahwa pelaksanaan Tasmi' Akbar Terbuka (10 Juz & 30 Juz bil Ghoib Sekali Duduk) akan dilaksanakan pada hari Sabtu-Ahad, 10-11 Oktober 2026 di Masjid Jami' IBS Riau.\n\nWali santri dapat menyaksikan siaran langsung tasmi' ananda melalui portal resmi rapor & link monitoring.",
+        authorUsername: "admin",
+        authorNama: "Admin SIM Al-Qur'an IBS",
+        authorRole: "admin",
+        createdAt: "2026-09-20 09:00:00",
+        likes: 31,
+        repliesCount: 0,
+        isPinned: true,
+        isClosed: false,
+        tags: ["Pengumuman", "Tasmi Akbar", "Masjid IBS", "Akademik"]
+      }
+    ];
+
+    const SEED_REPLIES = [
+      {
+        id: "rep-seed-1",
+        threadId: "th-seed-1",
+        content: "Wa'alaikumussalam Warahmatullahi Wabarakatuh akhi Rayhan.\n\nPenjelasan tajwid: Huruf Dhod (ض) keluar dari salah satu tepi lidah (atau kedua tepi lidah) yang disentuhkan dan ditekan ke gigi geraham atas bagian dalam, disertai sifat Istitholah (memanjangnya suara dari pangkal sampai ujung tepi lidah). Sedangkan Zho (ظ) keluar dari ujung lidah yang bertemu dengan ujung dua gigi seri atas.\n\nJangan membulatkan bibir atau menyamakan dengan 'dh' bahasa latin. Terus latih bersama muhafizh di halaqah antum.",
+        authorUsername: "muhafizh1",
+        authorNama: "Ust. Ahmad Syakir Al-Hafizh",
+        authorRole: "muhafizh",
+        createdAt: "2026-09-23 09:10:00",
+        likes: 8,
+        isSolution: true
+      },
+      {
+        id: "rep-seed-2",
+        threadId: "th-seed-1",
+        content: "Alhamdulillah sangat jelas sekali penjelasannya ustadz. Syukran jazakumullahu khair.",
+        authorUsername: "santri1",
+        authorNama: "Muhammad Rayhan (Santri)",
+        authorRole: "user",
+        createdAt: "2026-09-23 10:00:00",
+        likes: 2,
+        isSolution: false
+      },
+      {
+        id: "rep-seed-3",
+        threadId: "th-seed-2",
+        content: "Jazaakallahu khair ustadz atas panduan jadwalnya. Ini sangat membantu santri kelas 6 yang sedang mematangkan hafalan.",
+        authorUsername: "wali_santri_budi",
+        authorNama: "Bapak Budi (Wali Santri)",
+        authorRole: "user",
+        createdAt: "2026-09-22 20:30:00",
+        likes: 4,
+        isSolution: false
+      },
+      {
+        id: "rep-seed-4",
+        threadId: "th-seed-3",
+        content: "Memperindah suara Al-Qur'an (Tahsinus Shawt) adalah anjuran Sunnah. Niatkan semata-mata untuk mengagungkan kalamullah dan mentadabburi maknanya. Jika terlintas rasa ingin dipuji, segeralah beristighfar dan mohon perlindungan kepada Allah.",
+        authorUsername: "muhafizh_zulkifli",
+        authorNama: "Ust. Zulkifli Muhafizh",
+        authorRole: "muhafizh",
+        createdAt: "2026-09-21 16:45:00",
+        likes: 6,
+        isSolution: true
+      }
+    ];
+
+    // ================= INITIALIZATION =================
+    window.addEventListener("DOMContentLoaded", () => {
+      loadStoredSession();
+      loadStoredForumData();
+      renderUserNav();
+      renderCategories();
+      renderForumApp();
+      checkGasServerHealth();
+    });
+
+    // Session Management
+    function loadStoredSession() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_SESSION);
+        if (saved) {
+          currentUser = JSON.parse(saved);
+        }
+      } catch (err) {
+        currentUser = null;
+      }
+    }
+
+    function saveSession(user) {
+      currentUser = user;
+      if (user) {
+        localStorage.setItem(STORAGE_KEY_SESSION, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(STORAGE_KEY_SESSION);
+      }
+      renderUserNav();
+      renderThreads();
+      if (activeThread) {
+        renderReplyForm();
+      }
+    }
+
+    function handleLogout() {
+      saveSession(null);
+      showToast("Anda telah keluar dari akun.", "info");
+    }
+
+    // Role styling helper
+    function getRoleBadge(role) {
+      const r = String(role || "user").toLowerCase();
+      if (r === "super-admin" || r === "superadmin") {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800"><i class="fa-solid fa-crown text-[9px]"></i> Super Admin</span>`;
+      }
+      if (r === "admin") {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800"><i class="fa-solid fa-shield-halved text-[9px]"></i> Admin IBS</span>`;
+      }
+      if (r === "muhafizh" || r === "ustadz") {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-brand-100 text-brand-800"><i class="fa-solid fa-user-graduate text-[9px]"></i> Muhafizh</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700"><i class="fa-solid fa-user text-[9px]"></i> Santri/Wali</span>`;
+    }
+
+    function getUserAvatarLetter(name) {
+      const n = String(name || "U").trim();
+      return n ? n.charAt(0).toUpperCase() : "U";
+    }
+
+    // ================= DATA LOADING & SYNC =================
+    function loadStoredForumData() {
+      try {
+        const savedThreads = localStorage.getItem(STORAGE_KEY_LOCAL_THREADS);
+        const savedReplies = localStorage.getItem(STORAGE_KEY_LOCAL_REPLIES);
+
+        if (savedThreads) {
+          threads = JSON.parse(savedThreads);
+        } else {
+          threads = [...SEED_THREADS];
+          localStorage.setItem(STORAGE_KEY_LOCAL_THREADS, JSON.stringify(threads));
+        }
+
+        if (savedReplies) {
+          replies = JSON.parse(savedReplies);
+        } else {
+          replies = [...SEED_REPLIES];
+          localStorage.setItem(STORAGE_KEY_LOCAL_REPLIES, JSON.stringify(replies));
+        }
+      } catch (e) {
+        threads = [...SEED_THREADS];
+        replies = [...SEED_REPLIES];
+      }
+    }
+
+    function persistForumDataLocally() {
+      try {
+        localStorage.setItem(STORAGE_KEY_LOCAL_THREADS, JSON.stringify(threads));
+        localStorage.setItem(STORAGE_KEY_LOCAL_REPLIES, JSON.stringify(replies));
+      } catch (err) {}
+    }
+
+    async function refreshForumData(showToastAlert = false) {
+      const btn = document.getElementById("btnRefreshData");
+      if (btn) btn.classList.add("animate-spin");
+
+      try {
+        const url = `${currentGasUrl}?action=get_forum&t=${Date.now()}`;
+        const response = await fetch(url, { method: "GET", mode: "cors" });
+        if (response.ok) {
+          const res = await response.json();
+          if (res && res.success && Array.isArray(res.threads)) {
+            threads = res.threads;
+            if (Array.isArray(res.replies)) {
+              replies = res.replies;
+            }
+            persistForumDataLocally();
+            updateServerStatus(true, "Online (GAS)");
+            if (showToastAlert) showToast("Data forum berhasil disinkronkan dengan server!", "success");
+          }
+        }
+      } catch (err) {
+        console.warn("Gagal mengambil data dari Google Apps Script, menggunakan data lokal:", err);
+        updateServerStatus(false, "Mode Lokal");
+        if (showToastAlert) showToast("Menggunakan data lokal (Server GAS belum terhubung).", "info");
+      } finally {
+        if (btn) btn.classList.remove("animate-spin");
+        renderForumApp();
+      }
+    }
+
+    // Server Health Check
+    async function checkGasServerHealth() {
+      try {
+        const pingUrl = `${currentGasUrl}?action=ping&t=${Date.now()}`;
+        const res = await fetch(pingUrl, { mode: "cors" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            updateServerStatus(true, "GAS Terhubung");
+            // Auto sync
+            refreshForumData(false);
+            return;
+          }
+        }
+      } catch (err) {
+        // Fallback or retry
+      }
+      updateServerStatus(false, "Mode Lokal");
+    }
+
+    function updateServerStatus(online, text) {
+      const dot = document.getElementById("serverStatusDot");
+      const label = document.getElementById("serverStatusText");
+      if (dot && label) {
+        if (online) {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500 pulse-dot";
+          label.textContent = text || "Online";
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-amber-500";
+          label.textContent = text || "Mode Lokal";
+        }
+      }
+    }
+
+    // ================= RENDERING FUNCTIONS =================
+
+    function renderUserNav() {
+      const navArea = document.getElementById("userNavArea");
+      if (!navArea) return;
+
+      if (currentUser) {
+        navArea.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 transition">
+              <div class="w-7 h-7 rounded-full bg-brand-700 text-white font-bold text-xs flex items-center justify-center">
+                ${getUserAvatarLetter(currentUser.nama || currentUser.username)}
+              </div>
+              <div class="hidden sm:block text-left pr-2">
+                <span class="block text-xs font-bold text-slate-800 leading-tight max-w-[110px] truncate">${currentUser.nama || currentUser.username}</span>
+                <span class="block text-[10px] font-semibold text-brand-700 leading-tight">${currentUser.role || 'Santri'}</span>
+              </div>
+              <button onclick="handleLogout()" title="Keluar Akun" class="w-6 h-6 rounded-full text-slate-400 hover:text-rose-600 hover:bg-white flex items-center justify-center transition">
+                <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        navArea.innerHTML = `
+          <button 
+            type="button" 
+            onclick="openLoginModal()" 
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold transition"
+          >
+            <i class="fa-regular fa-circle-user text-base text-brand-700"></i>
+            <span>Masuk</span>
+          </button>
+        `;
+      }
+    }
+
+    function renderCategories() {
+      const nav = document.getElementById("categoryNav");
+      if (!nav) return;
+
+      nav.innerHTML = CATEGORIES.map(cat => {
+        const isActive = currentCategory === cat.name;
+        const count = cat.name === "Semua" ? threads.length : threads.filter(t => t.category === cat.name).length;
+
+        const activeClass = isActive 
+          ? "bg-brand-50 text-brand-900 font-bold border-l-4 border-brand-700 shadow-xs" 
+          : "text-slate-600 hover:bg-slate-100 font-medium";
+
+        return `
+          <button 
+            type="button" 
+            onclick="selectCategory('${cat.name}')" 
+            class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition ${activeClass}"
+          >
+            <div class="flex items-center gap-2.5 truncate">
+              <i class="fa-solid ${cat.icon} text-brand-700 w-4 text-center"></i>
+              <span class="truncate">${cat.label}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-brand-200 text-brand-900' : 'bg-slate-100 text-slate-600'}">
+              ${count}
+            </span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderStats() {
+      const elThreads = document.getElementById("statTotalThreads");
+      const elReplies = document.getElementById("statTotalReplies");
+      const elSolved = document.getElementById("statSolvedThreads");
+      const elUsers = document.getElementById("statActiveUsers");
+
+      if (elThreads) elThreads.textContent = threads.length;
+      if (elReplies) elReplies.textContent = replies.length;
+      
+      const solvedCount = replies.filter(r => r.isSolution).length;
+      if (elSolved) elSolved.textContent = solvedCount;
+
+      const userSet = new Set(threads.map(t => t.authorUsername).concat(replies.map(r => r.authorUsername)));
+      if (elUsers) elUsers.textContent = Math.max(userSet.size, 15);
+    }
+
+    function renderThreads() {
+      const container = document.getElementById("threadsContainer");
+      if (!container) return;
+
+      let filtered = [...threads];
+
+      // 1. Filter Kategori
+      if (currentCategory !== "Semua") {
+        filtered = filtered.filter(t => t.category === currentCategory);
+      }
+
+      // 2. Filter Search
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(t => 
+          (t.title && t.title.toLowerCase().includes(q)) ||
+          (t.content && t.content.toLowerCase().includes(q)) ||
+          (t.authorNama && t.authorNama.toLowerCase().includes(q)) ||
+          (t.tags && t.tags.some(tag => tag.toLowerCase().includes(q)))
+        );
+      }
+
+      // 3. Filter Tab
+      if (currentTab === "pinned") {
+        filtered = filtered.filter(t => t.isPinned);
+      } else if (currentTab === "popular") {
+        filtered.sort((a, b) => ((b.likes || 0) + (b.repliesCount || 0)) - ((a.likes || 0) + (a.repliesCount || 0)));
+      } else if (currentTab === "unanswered") {
+        filtered = filtered.filter(t => (t.repliesCount || 0) === 0);
+      } else if (currentTab === "latest") {
+        filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      }
+
+      // Render filter info bar
+      const infoBar = document.getElementById("filterInfoBar");
+      const infoText = document.getElementById("filterInfoText");
+      if (infoBar && infoText) {
+        if (currentCategory !== "Semua" || searchQuery.trim() || currentTab !== "all") {
+          infoBar.classList.remove("hidden");
+          let parts = [];
+          if (currentCategory !== "Semua") parts.push(`Kategori: <b>${currentCategory}</b>`);
+          if (searchQuery.trim()) parts.push(`Pencarian: "<b>${searchQuery}</b>"`);
+          if (currentTab !== "all") parts.push(`Filter: <b>${currentTab}</b>`);
+          infoText.innerHTML = `${parts.join(" • ")} (${filtered.length} diskusi ditemukan)`;
+        } else {
+          infoBar.classList.add("hidden");
+        }
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-10 text-center space-y-3">
+            <div class="w-16 h-16 rounded-2xl bg-brand-50 text-brand-700 flex items-center justify-center text-2xl mx-auto">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h4 class="text-base font-bold text-slate-800">Belum Ada Diskusi</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+              Tidak ditemukan topik diskusi pada kategori atau kata kunci yang dipilih. Jadilah yang pertama memulai pembahasan!
+            </p>
+            <button 
+              type="button" 
+              onclick="openNewThreadModal()" 
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold transition"
+            >
+              <i class="fa-solid fa-pen"></i> Buat Diskusi Pertama
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const hasSolution = replies.some(r => r.threadId === t.id && r.isSolution);
+        const isArabicText = /[\u0600-\u06FF]/.test(t.content || "");
+
+        return `
+          <article class="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 hover:border-brand-500/40 hover:shadow-md transition-all group relative cursor-pointer" onclick="openThreadDetail('${t.id}')">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-50 text-brand-800 border border-brand-200/60">
+                  ${t.category || 'Umum'}
+                </span>
+                ${t.isPinned ? `
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                    <i class="fa-solid fa-thumbtack text-[9px]"></i> Disematkan
+                  </span>
+                ` : ''}
+                ${hasSolution ? `
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check text-[9px] text-emerald-600"></i> Terjawab Solutif
+                  </span>
+                ` : ''}
+              </div>
+              <span class="text-[11px] text-slate-400 whitespace-nowrap">
+                <i class="fa-regular fa-clock mr-1"></i> ${formatRelativeTime(t.createdAt)}
+              </span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-brand-800 transition-colors leading-snug mb-1.5">
+              ${escapeHtml(t.title)}
+            </h3>
+
+            <!-- Content preview -->
+            <p class="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mb-3 ${isArabicText ? 'font-arabic text-right' : ''}">
+              ${escapeHtml(t.content)}
+            </p>
+
+            <!-- Tags -->
+            ${t.tags && t.tags.length ? `
+              <div class="flex flex-wrap gap-1 mb-3">
+                ${t.tags.map(tag => `
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600">#${escapeHtml(tag)}</span>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Bottom author & stats -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-brand-700 text-white font-bold text-[10px] flex items-center justify-center">
+                  ${getUserAvatarLetter(t.authorNama || t.authorUsername)}
+                </div>
+                <span class="font-bold text-slate-800 text-xs">${escapeHtml(t.authorNama || t.authorUsername)}</span>
+                ${getRoleBadge(t.authorRole)}
+              </div>
+
+              <!-- Likes & Replies counter -->
+              <div class="flex items-center gap-3 font-semibold text-slate-500">
+                <button 
+                  type="button" 
+                  onclick="event.stopPropagation(); quickLikeThread('${t.id}')" 
+                  class="flex items-center gap-1 hover:text-rose-600 active:scale-95 transition"
+                >
+                  <i class="fa-regular fa-heart text-rose-500"></i>
+                  <span>${t.likes || 0}</span>
+                </button>
+                <div class="flex items-center gap-1 text-slate-500">
+                  <i class="fa-regular fa-comment text-brand-600"></i>
+                  <span>${t.repliesCount || 0}</span>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderForumApp() {
+      renderCategories();
+      renderStats();
+      renderThreads();
+    }
+
+    // ================= FILTER & SEARCH HANDLERS =================
+    function selectCategory(catName) {
+      currentCategory = catName;
+      renderCategories();
+      renderThreads();
+    }
+
+    function setFilterTab(tabName) {
+      currentTab = tabName;
+      const tabs = ["all", "latest", "popular", "unanswered", "pinned"];
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (!el) return;
+        if (t === tabName) {
+          el.className = "px-3 py-1.5 rounded-xl whitespace-nowrap bg-brand-700 text-white shadow-xs transition";
+        } else {
+          el.className = "px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 transition";
+        }
+      });
+      renderThreads();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      const clearBtn = document.getElementById("clearSearchBtn");
+      if (clearBtn) {
+        if (val.trim()) clearBtn.classList.remove("hidden");
+        else clearBtn.classList.add("hidden");
+      }
+      renderThreads();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById("topSearchInput");
+      if (input) input.value = "";
+      searchQuery = "";
+      const clearBtn = document.getElementById("clearSearchBtn");
+      if (clearBtn) clearBtn.classList.add("hidden");
+      renderThreads();
+    }
+
+    function resetAllFilters() {
+      currentCategory = "Semua";
+      currentTab = "all";
+      searchQuery = "";
+      clearSearch();
+      setFilterTab("all");
+      renderForumApp();
+    }
+
+    // ================= MODAL: THREAD DETAIL =================
+    function openThreadDetail(threadId) {
+      const thread = threads.find(t => t.id === threadId);
+      if (!thread) return;
+
+      activeThread = thread;
+
+      // Populate Modal Content
+      document.getElementById("modalThreadCategoryBadge").textContent = thread.category || "Umum";
+      document.getElementById("modalThreadTitle").textContent = thread.title || "";
+      document.getElementById("modalThreadAuthorName").textContent = thread.authorNama || thread.authorUsername || "Anonim";
+      document.getElementById("modalThreadAuthorRole").innerHTML = getRoleBadge(thread.authorRole);
+      document.getElementById("modalThreadUsername").textContent = `@${thread.authorUsername || 'santri'}`;
+      document.getElementById("modalThreadTime").innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${thread.createdAt || 'Baru saja'}`;
+      document.getElementById("modalThreadAvatar").textContent = getUserAvatarLetter(thread.authorNama || thread.authorUsername);
+      document.getElementById("modalThreadLikeCount").textContent = thread.likes || 0;
+
+      // Body text formatting
+      const isArabic = /[\u0600-\u06FF]/.test(thread.content || "");
+      const bodyEl = document.getElementById("modalThreadBody");
+      bodyEl.className = `text-slate-800 text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${isArabic ? 'font-arabic text-lg sm:text-xl text-right font-medium' : ''}`;
+      bodyEl.textContent = thread.content || "";
+
+      // Tags
+      const tagsContainer = document.getElementById("modalThreadTags");
+      if (tagsContainer) {
+        tagsContainer.innerHTML = (thread.tags || []).map(tag => `
+          <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">#${escapeHtml(tag)}</span>
+        `).join("");
+      }
+
+      // Render Replies
+      renderModalReplies(thread.id);
+      renderReplyForm();
+
+      const modal = document.getElementById("threadDetailModal");
+      if (modal) modal.classList.remove("hidden");
+    }
+
+    function closeThreadDetailModal() {
+      const modal = document.getElementById("threadDetailModal");
+      if (modal) modal.classList.add("hidden");
+      activeThread = null;
+    }
+
+    function renderModalReplies(threadId) {
+      const repliesListEl = document.getElementById("modalRepliesList");
+      const repliesCountEl = document.getElementById("modalRepliesCount");
+      if (!repliesListEl) return;
+
+      const threadReplies = replies.filter(r => r.threadId === threadId);
+      if (repliesCountEl) repliesCountEl.textContent = threadReplies.length;
+
+      if (threadReplies.length === 0) {
+        repliesListEl.innerHTML = `
+          <div class="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 text-center text-xs text-slate-500">
+            <i class="fa-regular fa-comments text-2xl mb-2 text-slate-400 block"></i>
+            Belum ada tanggapan atau jawaban pada diskusi ini. Jadilah yang pertama memberikan faedah!
+          </div>
+        `;
+        return;
+      }
+
+      repliesListEl.innerHTML = threadReplies.map(rep => {
+        const isSolution = rep.isSolution;
+        const isAuthorOrAdmin = currentUser && (
+          currentUser.username === activeThread.authorUsername || 
+          currentUser.role === "admin" || 
+          currentUser.role === "super-admin" || 
+          currentUser.role === "muhafizh"
+        );
+        const isArabic = /[\u0600-\u06FF]/.test(rep.content || "");
+
+        return `
+          <div class="p-4 sm:p-5 rounded-2xl border transition-all ${isSolution ? 'bg-emerald-50/70 border-emerald-300 shadow-xs ring-1 ring-emerald-400/30' : 'bg-white border-slate-200/80'}">
+            
+            <div class="flex items-center justify-between gap-3 mb-2.5">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl ${isSolution ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'} font-bold text-xs flex items-center justify-center">
+                  ${getUserAvatarLetter(rep.authorNama || rep.authorUsername)}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(rep.authorNama || rep.authorUsername)}</span>
+                    ${getRoleBadge(rep.authorRole)}
+                  </div>
+                  <span class="text-[10px] text-slate-400">@${escapeHtml(rep.authorUsername)} • ${formatRelativeTime(rep.createdAt)}</span>
+                </div>
+              </div>
+
+              <!-- Solved Checkmark Badge -->
+              ${isSolution ? `
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white flex items-center gap-1 shadow-xs">
+                  <i class="fa-solid fa-circle-check"></i> Jawaban Solutif
+                </span>
+              ` : ''}
+            </div>
+
+            <!-- Reply Body -->
+            <div class="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-wrap ${isArabic ? 'font-arabic text-base sm:text-lg text-right font-medium' : ''}">
+              ${escapeHtml(rep.content)}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 text-xs">
+              <button 
+                type="button" 
+                onclick="likeReply('${rep.id}')" 
+                class="flex items-center gap-1 text-slate-500 hover:text-rose-600 font-semibold active:scale-95 transition"
+              >
+                <i class="fa-regular fa-thumbs-up"></i>
+                <span>${rep.likes || 0} Membantu</span>
+              </button>
+
+              ${isAuthorOrAdmin ? `
+                <button 
+                  type="button" 
+                  onclick="toggleSolveReply('${rep.id}')" 
+                  class="font-bold text-[11px] ${isSolution ? 'text-amber-700 hover:text-amber-900' : 'text-emerald-700 hover:text-emerald-900'} transition"
+                >
+                  <i class="fa-solid ${isSolution ? 'fa-xmark' : 'fa-check'} mr-1"></i>
+                  ${isSolution ? 'Batalkan Solusi' : 'Tandai Sebagai Jawaban Terbaik'}
+                </button>
+              ` : ''}
+            </div>
+
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderReplyForm() {
+      const container = document.getElementById("replyFormContainer");
+      if (!container) return;
+
+      if (!currentUser) {
+        container.innerHTML = `
+          <div class="text-center py-4 space-y-2">
+            <p class="text-xs text-slate-600 font-medium">Anda perlu masuk untuk menanggapi atau berdiskusi.</p>
+            <button 
+              type="button" 
+              onclick="openLoginModal()" 
+              class="px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-md shadow-brand-700/20 transition"
+            >
+              <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> Masuk Akun SIM IBS
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <form onsubmit="submitReply(event)" class="space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-brand-700 text-white font-bold text-[10px] flex items-center justify-center">
+                ${getUserAvatarLetter(currentUser.nama || currentUser.username)}
+              </div>
+              <span class="font-bold text-slate-800 text-xs">${currentUser.nama || currentUser.username}</span>
+              ${getRoleBadge(currentUser.role)}
+            </div>
+            <div class="flex items-center gap-1 text-[11px] text-slate-500">
+              <button type="button" onclick="insertReplyArabic('جَزَاكَ اللَّهُ خَيْرًا')" class="px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 font-arabic text-[10px]">Jazakallah</button>
+              <button type="button" onclick="insertReplyArabic('بَارَكَ اللَّهُ فِيكُمْ')" class="px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 font-arabic text-[10px]">Barakallah</button>
+            </div>
+          </div>
+
+          <textarea 
+            id="replyContentInput" 
+            rows="3" 
+            required 
+            placeholder="Tuliskan jawaban tajwid, konfirmasi murojaah, atau masukan santri di sini..." 
+            class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:border-brand-600 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+          ></textarea>
+
+          <div class="flex items-center justify-end">
+            <button 
+              type="submit" 
+              id="btnSubmitReply" 
+              class="px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-md shadow-brand-700/20 active:scale-95 transition"
+            >
+              <i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Tanggapan
+            </button>
+          </div>
+        </form>
+      `;
+    }
+
+    // ================= ACTIONS: THREAD & REPLIES =================
+
+    async function quickLikeThread(threadId) {
+      const thread = threads.find(t => t.id === threadId);
+      if (!thread) return;
+
+      thread.likes = (thread.likes || 0) + 1;
+      persistForumDataLocally();
+      renderThreads();
+
+      // Send to server in background
+      try {
+        fetch(`${currentGasUrl}`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "like_thread", threadId: threadId })
+        });
+      } catch (e) {}
+    }
+
+    async function likeCurrentThread() {
+      if (!activeThread) return;
+      quickLikeThread(activeThread.id);
+      document.getElementById("modalThreadLikeCount").textContent = activeThread.likes || 0;
+      showToast("Terima kasih atas apresiasi diskusi ini!", "success");
+    }
+
+    async function likeReply(replyId) {
+      const rep = replies.find(r => r.id === replyId);
+      if (!rep) return;
+      rep.likes = (rep.likes || 0) + 1;
+      persistForumDataLocally();
+      if (activeThread) renderModalReplies(activeThread.id);
+    }
+
+    async function toggleSolveReply(replyId) {
+      const rep = replies.find(r => r.id === replyId);
+      if (!rep) return;
+
+      rep.isSolution = !rep.isSolution;
+      persistForumDataLocally();
+      renderForumApp();
+      if (activeThread) renderModalReplies(activeThread.id);
+
+      showToast(rep.isSolution ? "Jawaban ditandai sebagai solusi tepat." : "Status solusi dibatalkan.", "info");
+
+      // Sync with GAS
+      try {
+        fetch(`${currentGasUrl}`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "solve_reply", replyId: replyId })
+        });
+      } catch (e) {}
+    }
+
+    async function submitReply(event) {
+      event.preventDefault();
+      if (!currentUser) {
+        openLoginModal();
+        return;
+      }
+      if (!activeThread) return;
+
+      const input = document.getElementById("replyContentInput");
+      const content = input ? input.value.trim() : "";
+      if (!content) return;
+
+      const submitBtn = document.getElementById("btnSubmitReply");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Mengirim...`;
+      }
+
+      const newReply = {
+        id: "rep-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        threadId: activeThread.id,
+        content: content,
+        authorUsername: currentUser.username,
+        authorNama: currentUser.nama || currentUser.username,
+        authorRole: currentUser.role || "user",
+        createdAt: formatCurrentDateTime(),
+        likes: 0,
+        isSolution: false
+      };
+
+      // Add to local state immediately
+      replies.push(newReply);
+      activeThread.repliesCount = (activeThread.repliesCount || 0) + 1;
+      persistForumDataLocally();
+
+      if (input) input.value = "";
+      renderModalReplies(activeThread.id);
+      renderForumApp();
+      showToast("Balasan Anda berhasil dikirim!", "success");
+
+      // Send to Google Apps Script
+      try {
+        const res = await fetch(`${currentGasUrl}`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "create_reply",
+            threadId: activeThread.id,
+            content: content,
+            authorUsername: currentUser.username,
+            authorNama: currentUser.nama || currentUser.username,
+            authorRole: currentUser.role || "user"
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.reply) {
+            newReply.id = data.reply.id;
+            persistForumDataLocally();
+          }
+        }
+      } catch (err) {
+        console.warn("Disimpan di cache lokal, sync tertunda:", err);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Tanggapan`;
+        }
+      }
+    }
+
+    // ================= MODAL: BUAT DISKUSI BARU =================
+    function openNewThreadModal() {
+      if (!currentUser) {
+        openLoginModal();
+        showToast("Silakan masuk terlebih dahulu untuk membuat diskusi.", "info");
+        return;
+      }
+      const modal = document.getElementById("newThreadModal");
+      if (modal) modal.classList.remove("hidden");
+    }
+
+    function closeNewThreadModal() {
+      const modal = document.getElementById("newThreadModal");
+      if (modal) modal.classList.add("hidden");
+      const form = document.getElementById("newThreadForm");
+      if (form) form.reset();
+    }
+
+    function insertTextToContent(str) {
+      const textarea = document.getElementById("newThreadContent");
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = textarea.value;
+      textarea.value = val.substring(0, start) + str + val.substring(end);
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + str.length;
+    }
+
+    function insertReplyArabic(str) {
+      const textarea = document.getElementById("replyContentInput");
+      if (!textarea) return;
+      textarea.value = (textarea.value ? textarea.value + " " : "") + str;
+      textarea.focus();
+    }
+
+    async function submitNewThread(event) {
+      event.preventDefault();
+      if (!currentUser) {
+        openLoginModal();
+        return;
+      }
+
+      const title = document.getElementById("newThreadTitle").value.trim();
+      const category = document.getElementById("newThreadCategory").value;
+      const content = document.getElementById("newThreadContent").value.trim();
+      const tagsRaw = document.getElementById("newThreadTags").value.trim();
+      const tags = tagsRaw ? tagsRaw.split(",").map(t => t.trim()).filter(Boolean) : [];
+
+      if (!title || !content) return;
+
+      const btn = document.getElementById("btnSubmitThread");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Menyimpan...`;
+      }
+
+      const newThread = {
+        id: "th-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        title: title,
+        category: category,
+        content: content,
+        authorUsername: currentUser.username,
+        authorNama: currentUser.nama || currentUser.username,
+        authorRole: currentUser.role || "user",
+        createdAt: formatCurrentDateTime(),
+        likes: 0,
+        repliesCount: 0,
+        isPinned: false,
+        isClosed: false,
+        tags: tags
+      };
+
+      // Add to front of threads list
+      threads.unshift(newThread);
+      persistForumDataLocally();
+      renderForumApp();
+      closeNewThreadModal();
+      showToast("Alhamdulillah! Diskusi Anda berhasil diterbitkan.", "success");
+
+      // Send to GAS Backend
+      try {
+        const res = await fetch(`${currentGasUrl}`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "create_thread",
+            title: title,
+            category: category,
+            content: content,
+            tags: tags.join(", "),
+            authorUsername: currentUser.username,
+            authorNama: currentUser.nama || currentUser.username,
+            authorRole: currentUser.role || "user"
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.thread) {
+            newThread.id = data.thread.id;
+            persistForumDataLocally();
+          }
+        }
+      } catch (err) {
+        console.warn("Disimpan di lokal, backend GAS tertunda:", err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1.5"></i> Terbitkan Diskusi`;
+        }
+      }
+    }
+
+    // ================= MODAL: LOGIN PENGGUNA =================
+    function openLoginModal() {
+      const modal = document.getElementById("loginModal");
+      if (modal) modal.classList.remove("hidden");
+      hideLoginAlert();
+    }
+
+    function closeLoginModal() {
+      const modal = document.getElementById("loginModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    function showLoginAlert(msg, isSuccess = false) {
+      const el = document.getElementById("loginAlertBox");
+      if (!el) return;
+      el.className = `p-3 rounded-xl text-xs font-semibold ${isSuccess ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`;
+      el.innerHTML = msg;
+      el.classList.remove("hidden");
+    }
+
+    function hideLoginAlert() {
+      const el = document.getElementById("loginAlertBox");
+      if (el) el.classList.add("hidden");
+    }
+
+    function fillTestAccount(username, password) {
+      document.getElementById("loginUsername").value = username;
+      document.getElementById("loginPassword").value = password;
+    }
+
+    function togglePasswordVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    async function handleUserLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!username || !password) return;
+
+      const btn = document.getElementById("btnLoginSubmit");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Memeriksa data...`;
+      }
+      hideLoginAlert();
+
+      // Step 1: Try authenticating against code.gs Backend
+      try {
+        const res = await fetch(`${currentGasUrl}`, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "login",
+            username: username,
+            password: password,
+            deviceInfo: "Forum SIM GitHub Pages"
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success && data.user) {
+            saveSession({
+              username: data.user.username,
+              nama: data.user.nama || data.user.username,
+              role: data.user.role || "user",
+              sessionId: data.user.sessionId || ("sid-" + Date.now())
+            });
+            showToast(`Ahlan wa Sahlan, ${currentUser.nama}!`, "success");
+            closeLoginModal();
+            return;
+          } else {
+            showLoginAlert((data && data.message) || "Username atau kata sandi tidak cocok dengan data SIM IBS.");
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("GAS server tidak merespons, mencoba verifikasi akun lokal:", err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i> Masuk Sekarang`;
+        }
+      }
+
+      // Step 2: Fallback account logic for offline/demo if server is unavailable
+      if (password === "1234567890" || password === "admin" || password === "santri") {
+        let role = "user";
+        let nama = username;
+        if (username.toLowerCase().includes("admin")) {
+          role = "admin";
+          nama = "Admin SIM Al-Qur'an IBS";
+        } else if (username.toLowerCase().includes("muhafizh") || username.toLowerCase().includes("ustadz")) {
+          role = "muhafizh";
+          nama = "Ust. " + username.replace(/_/g, " ");
+        } else {
+          nama = "Santri " + username;
+        }
+
+        saveSession({
+          username: username,
+          nama: nama,
+          role: role,
+          sessionId: "local-sid-" + Date.now()
+        });
+
+        showToast(`Login berhasil sebagai ${nama}`, "success");
+        closeLoginModal();
+      } else {
+        showLoginAlert("Gagal terhubung ke server SIM IBS dan password pengujian tidak cocok.");
+      }
+    }
+
+    // ================= MODAL: SERVER SETTINGS =================
+    function openServerSettingsModal() {
+      const modal = document.getElementById("serverSettingsModal");
+      if (modal) modal.classList.remove("hidden");
+      const input = document.getElementById("inputGasUrl");
+      if (input) input.value = currentGasUrl;
+      const res = document.getElementById("serverPingResult");
+      if (res) res.classList.add("hidden");
+    }
+
+    function closeServerSettingsModal() {
+      const modal = document.getElementById("serverSettingsModal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    async function testGasServerConnection() {
+      const input = document.getElementById("inputGasUrl");
+      const testUrl = input ? input.value.trim() : "";
+      const resBox = document.getElementById("serverPingResult");
+      const btn = document.getElementById("btnTestGas");
+
+      if (!testUrl) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menguji...`;
+      }
+
+      try {
+        const start = Date.now();
+        const response = await fetch(`${testUrl}?action=ping&t=${Date.now()}`, { mode: "cors" });
+        const latency = Date.now() - start;
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.success) {
+            resBox.className = "p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+            resBox.innerHTML = `✅ Server terhubung dengan baik! Latensi: ${latency}ms<br>Versi API: ${data.version || '1.0'}`;
+            resBox.classList.remove("hidden");
+            updateServerStatus(true, "GAS Terhubung");
+            return;
+          }
+        }
+        throw new Error("Respons server tidak sesuai.");
+      } catch (err) {
+        resBox.className = "p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200";
+        resBox.innerHTML = `❌ Gagal menghubungi server: ${err.message || 'Koneksi ditolak/CORS'}`;
+        resBox.classList.remove("hidden");
+        updateServerStatus(false, "Mode Lokal");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> Uji Koneksi Server`;
+        }
+      }
+    }
+
+    function saveGasServerUrl() {
+      const input = document.getElementById("inputGasUrl");
+      const newUrl = input ? input.value.trim() : "";
+      if (newUrl) {
+        currentGasUrl = newUrl;
+        localStorage.setItem(STORAGE_KEY_GAS_URL, newUrl);
+        showToast("URL Google Apps Script berhasil diperbarui!", "success");
+        closeServerSettingsModal();
+        refreshForumData(true);
+      }
+    }
+
+    function openPanduanAdab() {
+      showToast("Adab menuntut ilmu: Bersihkan niat, hormati asatidz, dan jaga ukhuwah.", "info");
+    }
+
+    function shareCurrentThread() {
+      if (!activeThread) return;
+      const text = `${activeThread.title} - Forum SIM Al-Qur'an IBS Riau\n${window.location.href}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+        showToast("Tautan diskusi disalin ke clipboard!", "success");
+      } else {
+        prompt("Salin tautan diskusi berikut:", text);
+      }
+    }
+
+    // ================= UTILITIES =================
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatCurrentDateTime() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function formatRelativeTime(dateStr) {
+      if (!dateStr) return "Baru saja";
+      try {
+        const time = new Date(dateStr.replace(/-/g, "/")).getTime();
+        if (isNaN(time)) return dateStr;
+        const diffSec = Math.floor((Date.now() - time) / 1000);
+        if (diffSec < 60) return "Baru saja";
+        if (diffSec < 3600) return `${Math.floor(diffSec / 60)} mnt lalu`;
+        if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} jam lalu`;
+        if (diffSec < 604800) return `${Math.floor(diffSec / 86400)} hari lalu`;
+        return dateStr.split(" ")[0];
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+
+      const toast = document.createElement("div");
+      const icon = type === "success" ? "fa-circle-check text-emerald-500" : (type === "error" ? "fa-circle-xmark text-rose-500" : "fa-circle-info text-blue-500");
+      
+      toast.className = "flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-xl text-xs font-semibold text-slate-800 pointer-events-auto transform transition-all duration-300 translate-y-3 opacity-0";
+      toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+      
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove("translate-y-3", "opacity-0");
+      });
+
+      setTimeout(() => {
+        toast.classList.add("translate-y-3", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+
+</body>
+</html>
