@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Forum SIM Murojaah</title>
-<meta name="description" content="Ruang diskusi muhafizh dan pengelola SIM Murojaah Al-Qur'an.">
+<meta name="description" content="Panduan penggunaan SIM Murojaah dan ruang diskusi muhafizh MAS Al-Ihsan Boarding School Riau.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Forum SIM Murojaah">
+<meta property="og:description" content="Panduan penggunaan SIM Murojaah dan ruang diskusi muhafizh MAS Al-Ihsan Boarding School Riau.">
 <meta name="theme-color" content="#0b3d2c">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23b8892e' d='M12 2L14.93 4.93L19.07 4.93L19.07 9.07L22 12L19.07 14.93L19.07 19.07L14.93 19.07L12 22L9.07 19.07L4.93 19.07L4.93 14.93L2 12L4.93 9.07L4.93 4.93L9.07 4.93Z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -272,13 +275,10 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 .reply-tools { margin-top: .45rem; }
 .no-replies { color: var(--redup); font-size: .925rem; padding: .75rem 0 0; margin: 0; }
 
-.composer {
-  margin-top: 1.6rem; background: var(--permukaan);
-  border: 1px solid var(--garis); border-radius: var(--radius); padding: 1rem 1rem .9rem;
-}
-.composer label { display: block; font-weight: 700; font-size: .925rem; margin-bottom: .5rem; }
-.composer textarea { min-height: 6.5rem; }
-.composer .form-foot { margin-top: .7rem; }
+.composer { margin-top: 1.75rem; }
+.composer > label { display: block; font-weight: 700; font-size: .95rem; margin-bottom: .55rem; }
+.composer .form-foot, .reply-edit .form-foot { margin-top: .7rem; }
+.reply-edit { margin-top: .5rem; }
 
 @media (prefers-reduced-motion: no-preference) {
   .skel i { animation: denyut 1.3s ease-in-out infinite alternate; }
@@ -300,7 +300,6 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 /* ---------- Tulis topik ---------- */
 .compose h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.012em; margin: 1rem 0 1.4rem; }
 .compose h1:focus { outline: none; }
-.compose textarea { min-height: 14rem; }
 
 /* ---------- Kaki & toast ---------- */
 .foot {
@@ -328,6 +327,103 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Editor (Tulis / Pratinjau, gambar, langkah) ---------- */
+.editor {
+  border: 1px solid var(--garis-kuat); border-radius: var(--radius);
+  background: var(--permukaan); overflow: hidden;
+}
+.editor:focus-within { border-color: var(--daun); box-shadow: 0 0 0 1px var(--daun); }
+.editor.dragging { border-color: var(--emas); box-shadow: 0 0 0 2px var(--emas); }
+.editor-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: .25rem .5rem; flex-wrap: wrap;
+  padding: .3rem .4rem; border-bottom: 1px solid var(--garis);
+}
+.editor-tabs { display: flex; gap: .15rem; }
+.editor-tabs button {
+  background: none; border: 0; border-radius: var(--radius-s); cursor: pointer;
+  padding: .42rem .65rem; font: 600 .84rem var(--font); color: var(--redup);
+}
+.editor-tabs button[aria-selected="true"] { color: var(--tinta); background: var(--kertas); }
+.editor-tools { display: flex; gap: .1rem; }
+.tool {
+  display: inline-flex; align-items: center; gap: .35rem; cursor: pointer;
+  background: none; border: 0; border-radius: var(--radius-s);
+  padding: .42rem .55rem; font: 600 .82rem var(--font); color: var(--tinta);
+}
+.tool:hover { background: var(--kertas); }
+.tool svg { width: 1.05rem; height: 1.05rem; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tool[disabled] { opacity: .35; cursor: default; background: none; }
+.tool b { font-size: .95rem; padding: 0 .2rem; }
+.editor textarea { display: block; border: 0; border-radius: 0; min-height: 8rem; }
+.editor textarea:focus-visible { outline: none; }
+.editor-preview { padding: .9rem 1rem; min-height: 8rem; font-size: .98rem; line-height: 1.7; overflow-wrap: anywhere; }
+.editor-preview[hidden] { display: none; }
+.editor-preview p { margin: 0 0 .9em; }
+.compose .editor textarea { min-height: 16rem; }
+.compose .editor-preview { min-height: 16rem; }
+.btn-row { display: flex; gap: .5rem; margin-left: auto; }
+
+/* ---------- Isi: langkah, tebal, gambar ---------- */
+.post-body ol, .post-body ul, .reply-body ol, .reply-body ul, .editor-preview ol, .editor-preview ul {
+  margin: 0 0 .9em; padding-left: 1.65rem;
+}
+.post-body li, .reply-body li, .editor-preview li { margin: .3rem 0; padding-left: .25rem; }
+.post-body ol > li::marker, .reply-body ol > li::marker, .editor-preview ol > li::marker {
+  font-weight: 800; color: var(--daun-teks);
+}
+.post-body strong, .reply-body strong, .editor-preview strong { font-weight: 700; }
+.shot { margin: .4rem 0 1.25rem; }
+.shot-zoom {
+  display: block; max-width: 100%; min-width: 8rem; min-height: 4rem; padding: 0; overflow: hidden;
+  border: 1px solid var(--garis); border-radius: var(--radius-s); background: var(--permukaan); cursor: zoom-in;
+}
+.shot img { display: block; max-width: 100%; width: auto; height: auto; max-height: min(34rem, 75vh); }
+.shot figcaption { margin-top: .45rem; font-size: .85rem; color: var(--redup); line-height: 1.5; }
+ol + .shot, ul + .shot, .shot + .shot { margin-left: 1.9rem; }
+.shot-pending, .shot-missing {
+  display: block; border: 1px dashed var(--garis-kuat); border-radius: var(--radius-s);
+  padding: 1rem 1.1rem; font-size: .85rem; color: var(--redup); margin: .4rem 0 1.25rem;
+}
+.edited { color: var(--redup); }
+
+/* ---------- Bagikan ---------- */
+.share { position: relative; }
+.share-btn svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.share-menu {
+  position: absolute; top: calc(100% + .35rem); left: 0; z-index: 5; min-width: 13rem;
+  background: var(--permukaan); border: 1px solid var(--garis-kuat); border-radius: var(--radius);
+  padding: .35rem; box-shadow: 0 10px 28px rgba(8, 30, 18, .16);
+}
+.share-menu[hidden] { display: none; }
+.share-menu > * {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-radius: var(--radius-s);
+  padding: .62rem .75rem; font: 500 .92rem var(--font); color: var(--tinta); text-decoration: none;
+}
+.share-menu > *:hover, .share-menu > *:focus-visible { background: var(--kertas); outline: none; }
+
+/* ---------- Penampil gambar ---------- */
+.lightbox {
+  width: 100%; height: 100%; max-width: 100vw; max-height: 100vh; margin: 0;
+  border: 0; padding: 0; background: transparent; color: #eef3ef;
+}
+.lightbox::backdrop { background: rgba(6, 14, 10, .9); }
+.lightbox[open] {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem;
+  padding: calc(4rem + env(safe-area-inset-top)) 1rem calc(1.25rem + env(safe-area-inset-bottom));
+}
+.lb-bar {
+  position: fixed; top: calc(.9rem + env(safe-area-inset-top)); right: 1rem; left: 1rem;
+  display: flex; justify-content: flex-end; gap: .6rem;
+}
+.lb-btn {
+  color: #fff; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px; padding: .45rem .95rem; font: 600 .85rem var(--font); text-decoration: none; cursor: pointer;
+}
+.lb-btn:hover { background: rgba(255, 255, 255, .2); }
+.lightbox img { max-width: 100%; max-height: calc(100% - 3rem); object-fit: contain; border-radius: 4px; background: #fff; }
+.lightbox p { margin: 0; max-width: 42rem; text-align: center; font-size: .92rem; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -353,6 +449,15 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   <a href="../">Buka aplikasi SIM Murojaah</a>
 </footer>
 
+<dialog id="lightbox" class="lightbox" aria-label="Gambar diperbesar">
+  <div class="lb-bar">
+    <a class="lb-btn" id="lbOpen" href="#" target="_blank" rel="noopener">Buka ukuran asli</a>
+    <button class="lb-btn" type="button" id="lbClose">Tutup</button>
+  </div>
+  <img id="lbImg" alt="">
+  <p id="lbCap" dir="auto"></p>
+</dialog>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -366,9 +471,10 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
      (berakhiran /exec).
      ======================================================= */
   var CONFIG = {
-    WEB_APP_URL: "https://script.google.com/macros/s/AKfycbxv29VDLzUWt-J6rEL-KcqylOGqilnPiijfibo-xj6mX7Pu3kAz6l1av9OkMddtX_Kw-Q/exec",
+    WEB_APP_URL: "https://script.google.com/macros/s/GANTI_DENGAN_ID_DEPLOYMENT/exec",
     PAGE_SIZE: 20,
-    STALE_MS: 60 * 1000
+    STALE_MS: 60 * 1000,
+    IMAGE_MAX_SIDE: 1600
   };
 
   var KEY = {
@@ -388,20 +494,24 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     logoUrl: "",
     primaryColor: "",
     sidebarColor: "",
-    publicRead: false,
+    publicRead: true,
     categories: [
+      { id: "panduan", label: "Panduan SIM", adminOnly: true },
       { id: "umum", label: "Umum" },
       { id: "tahfizh", label: "Tahfizh & Murojaah" },
       { id: "hadits", label: "Hadits Arbain" },
       { id: "aplikasi", label: "Kendala Aplikasi" },
       { id: "pengumuman", label: "Pengumuman", adminOnly: true }
     ],
-    limits: { judulMin: 5, judul: 150, isi: 5000, balasan: 3000 }
+    limits: { judulMin: 5, judul: 150, isi: 10000, balasan: 4000, gambarBytes: 2097152 }
   };
 
   var STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L14.93 4.93L19.07 4.93L19.07 9.07L22 12L19.07 14.93L19.07 19.07L14.93 19.07L12 22L9.07 19.07L4.93 19.07L4.93 14.93L2 12L4.93 9.07L4.93 4.93L9.07 4.93Z"/></svg>';
   var LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   var SEARCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  var ICON_IMG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>';
+  var ICON_STEP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6h11M10 12h11M10 18h11"/><path d="M4 5h1v4M4 9h2"/><path d="M4 15.5a1.2 1.2 0 0 1 2 .9c0 .8-2 1.6-2 2.6h2.2"/></svg>';
+  var ICON_SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>';
 
   /* ---------- Penyimpanan lokal ---------- */
   var store = {
@@ -437,9 +547,11 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   var app = document.getElementById("app");
   var navSeq = 0;
   var listSeq = 0;
+  var lastHash = "";
 
   /* ---------- Utilitas ---------- */
   function $(sel, root) { return (root || document).querySelector(sel); }
+  function noop() {}
 
   function esc(v) {
     return String(v == null ? "" : v)
@@ -467,6 +579,9 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     return "Forum web | " + String(navigator.userAgent || "").slice(0, 180) + " [CLIENT_ID:" + clientId() + "]";
   }
 
+  function limits() { return Object.assign({}, DEFAULT_META.limits, state.meta.limits || {}); }
+  function isAdmin() { return !!(state.session && state.session.user && state.session.user.isAdmin); }
+
   function catById(id) {
     var list = state.meta.categories || [];
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
@@ -474,6 +589,10 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   }
   function catLabel(id) { var c = catById(id); return c ? c.label : (id || "Umum"); }
   function catGold(id) { var c = catById(id); return !!(c && c.adminOnly); }
+
+  function setTitle(text) {
+    document.title = text ? text + " – Forum Murojaah" : "Forum SIM Murojaah";
+  }
 
   var rtf = window.Intl && Intl.RelativeTimeFormat ? new Intl.RelativeTimeFormat("id", { numeric: "auto" }) : null;
   function timeAgo(iso) {
@@ -498,6 +617,9 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   function timeTag(iso) {
     return '<time datetime="' + esc(iso) + '" title="' + esc(fullDate(iso)) + '">' + esc(timeAgo(iso)) + "</time>";
   }
+  function editedTag(iso) {
+    return iso ? '<span class="edited" title="Diedit ' + esc(fullDate(iso)) + '">diedit</span>' : "";
+  }
 
   function initials(nama) {
     var clean = String(nama || "").replace(/^(ust\.?|ustadz|ustaz|ustadzah|ustazah|h\.|hj\.)\s+/i, "");
@@ -512,52 +634,124 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     return '<span class="avatar av' + (h % 6) + '" aria-hidden="true">' + esc(initials(author.nama)) + "</span>";
   }
 
-  /* Paragraf yang mayoritas huruf Arab ditampilkan RTL dengan huruf Naskh. */
+  /* =======================================================
+     PERENDER ISI
+     - baris "1. ..." menjadi langkah bernomor, "- ..." menjadi butir
+     - **teks** menjadi tebal, tautan http(s) otomatis aktif
+     - ![keterangan](gambar:ID) menjadi gambar dari Google Drive
+     - paragraf yang mayoritas huruf Arab tampil RTL
+     ======================================================= */
+  var IMG_TOKEN = /!\[([^\]\n]*)\]\((gambar|unggah):([A-Za-z0-9_-]{1,80})\)/g;
   var AR_CHARS = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
+
+  function driveThumb(id, w) {
+    return "https://drive.google.com/thumbnail?id=" + encodeURIComponent(id) + "&sz=w" + w;
+  }
+
   function arabicHeavy(text) {
     var letters = text.replace(/[\s0-9.,;:!?()\[\]"'«»\-–—*_\/]/g, "");
     if (!letters) return false;
-    var ar = (text.match(AR_CHARS) || []).length;
-    return ar / letters.length > 0.5;
+    return (text.match(AR_CHARS) || []).length / letters.length > 0.5;
   }
-  function linkify(raw) {
-    var parts = raw.split(/(https?:\/\/[^\s<>"']+)/g);
+
+  function bold(escaped) {
+    return escaped.replace(/\*\*(?=\S)([^\n]*?\S)\*\*/g, "<strong>$1</strong>");
+  }
+
+  function inline(raw) {
+    var parts = String(raw).split(/(https?:\/\/[^\s<>"']+)/g);
     return parts.map(function (part, i) {
-      if (i % 2 === 0) return esc(part);
+      if (i % 2 === 0) return bold(esc(part));
       var url = part, tail = "";
       var m = url.match(/[.,;:!?)\]]+$/);
       if (m) { tail = m[0]; url = url.slice(0, -tail.length); }
       var label = url.replace(/^https?:\/\/(www\.)?/, "");
       if (label.length > 48) label = label.slice(0, 45) + "…";
       return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer nofollow">' + esc(label) + "</a>" + esc(tail);
-    }).join("");
+    }).join("").replace(/\n/g, "<br>");
   }
-  function formatBody(text) {
-    return String(text || "").split(/\n{2,}/).map(function (p) {
-      var html = linkify(p).replace(/\n/g, "<br>");
-      return arabicHeavy(p)
-        ? '<p class="ar" dir="rtl" lang="ar">' + html + "</p>"
-        : '<p dir="auto">' + html + "</p>";
+
+  function formatText(text) {
+    var blocks = [];
+    var cur = null;
+    function flush() { if (cur) { blocks.push(cur); cur = null; } }
+
+    String(text).split("\n").forEach(function (line) {
+      var t = line.trim();
+      if (!t) { flush(); return; }
+      var num = t.match(/^(\d{1,3})[.)]\s+(.*)$/);
+      var dot = t.match(/^[-•*]\s+(.*)$/);
+      if (num) {
+        if (!cur || cur.type !== "ol") { flush(); cur = { type: "ol", start: parseInt(num[1], 10), items: [] }; }
+        cur.items.push(num[2]);
+      } else if (dot) {
+        if (!cur || cur.type !== "ul") { flush(); cur = { type: "ul", items: [] }; }
+        cur.items.push(dot[1]);
+      } else if (cur && cur.type !== "p") {
+        cur.items[cur.items.length - 1] += "\n" + t;   // lanjutan dari langkah sebelumnya
+      } else {
+        if (!cur) cur = { type: "p", lines: [] };
+        cur.lines.push(line);
+      }
+    });
+    flush();
+
+    return blocks.map(function (b) {
+      if (b.type === "p") {
+        var raw = b.lines.join("\n");
+        return arabicHeavy(raw)
+          ? '<p class="ar" dir="rtl" lang="ar">' + inline(raw) + "</p>"
+          : '<p dir="auto">' + inline(raw) + "</p>";
+      }
+      var start = b.type === "ol" && b.start !== 1 ? ' start="' + b.start + '"' : "";
+      return "<" + b.type + start + ">" + b.items.map(function (it) {
+        return '<li dir="auto">' + inline(it) + "</li>";
+      }).join("") + "</" + b.type + ">";
     }).join("");
   }
 
+  function figureHTML(alt, kind, id) {
+    if (kind === "unggah") return '<div class="shot-pending">Mengunggah gambar…</div>';
+    if (id.length < 10) return "";
+    return '<figure class="shot">' +
+      '<button type="button" class="shot-zoom" data-zoom="' + esc(id) + '" data-alt="' + esc(alt) + '" ' +
+      'aria-label="Perbesar gambar' + (alt ? ": " + esc(alt) : "") + '">' +
+      '<img src="' + esc(driveThumb(id, 1200)) + '" alt="' + esc(alt) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer">' +
+      "</button>" +
+      (alt ? '<figcaption dir="auto">' + inline(alt) + "</figcaption>" : "") +
+      "</figure>";
+  }
+
+  function formatBody(text) {
+    text = String(text || "");
+    var html = "", last = 0, m;
+    var re = new RegExp(IMG_TOKEN.source, "g");
+    while ((m = re.exec(text))) {
+      html += formatText(text.slice(last, m.index));
+      html += figureHTML(m[1].trim(), m[2], m[3]);
+      last = re.lastIndex;
+    }
+    return html + formatText(text.slice(last));
+  }
+
+  /* ---------- Umpan balik ---------- */
   var toastTimer = null;
   function toast(msg, isError) {
     var el = document.getElementById("toast");
     el.textContent = msg;
     el.className = isError ? "show err" : "show";
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.className = isError ? "err" : ""; }, isError ? 4200 : 2600);
+    toastTimer = setTimeout(function () { el.className = isError ? "err" : ""; }, isError ? 4500 : 2600);
   }
 
   function setBusy(btn, busy, label) {
     if (!btn) return;
     if (busy) {
-      btn.dataset.label = btn.textContent;
+      btn.dataset.label = btn.innerHTML;
       btn.textContent = label || "Memproses…";
       btn.disabled = true;
     } else {
-      btn.textContent = btn.dataset.label || btn.textContent;
+      if (btn.dataset.label) btn.innerHTML = btn.dataset.label;
       btn.disabled = false;
     }
   }
@@ -592,7 +786,8 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     field.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event("submit", { cancelable: true }));
+        if (form.requestSubmit) form.requestSubmit();
+        else form.dispatchEvent(new Event("submit", { cancelable: true }));
       }
     });
   }
@@ -621,7 +816,7 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     if (!isConfigured()) return Promise.reject(new ApiError("Forum belum tersambung ke server.", { setup: true }));
 
     var payload = Object.assign({ action: action }, data || {});
-    if (state.session && state.session.token && !payload.token) payload.token = state.session.token;
+    if (state.session && state.session.token && payload.token === undefined) payload.token = state.session.token;
 
     /* Body string tanpa header khusus = request "simple", jadi tidak ada preflight CORS. */
     return fetch(CONFIG.WEB_APP_URL, {
@@ -638,7 +833,12 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       if (json.meta) applyMeta(json.meta, true);
       if (json.authError) {
         clearSession();
-        throw new ApiError(json.message || "Sesi forum berakhir. Silakan masuk lagi.", { auth: true });
+        throw new ApiError(json.message || "Masuk dulu untuk melanjutkan.", { auth: true });
+      }
+      if (json.sessionExpired && state.session) {
+        clearSession();
+        toast("Sesi forum berakhir. Masuk lagi untuk menulis atau membalas.", true);
+        setTimeout(function () { state.view = ""; route(); }, 0);
       }
       if (!json.success) throw new ApiError(json.message || "Permintaan gagal.", json);
       if (json.user && state.session) {
@@ -680,7 +880,6 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     state.session = null;
     store.del(KEY.session);
     state.list.loadedAt = 0;
-    state.topic = null;
     renderWho();
   }
 
@@ -712,10 +911,11 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       who.hidden = false;
       $("#btnLogout").addEventListener("click", function () {
         clearSession();
-        toast("Anda sudah keluar dari forum");
-        go("#/masuk");
+        toast("Anda sudah keluar. Forum tetap bisa dibaca.");
+        state.view = "";
+        route();
       });
-    } else if (state.meta.publicRead && state.view !== "login") {
+    } else if (state.meta.publicRead !== false && state.view !== "login") {
       who.innerHTML = '<a class="who-btn" href="#/masuk">Masuk</a>';
       who.hidden = false;
     } else {
@@ -733,6 +933,7 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   function parseRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#\/?/, ""));
     if (h.indexOf("t/") === 0) return { name: "topic", id: h.slice(2) };
+    if (h.indexOf("edit/") === 0) return { name: "edit", id: h.slice(5) };
     if (h === "baru") return { name: "new" };
     if (h === "masuk") return { name: "login" };
     return { name: "list" };
@@ -747,25 +948,31 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 
     if (r.name === "login") {
       if (loggedIn) { go("#/"); return; }
-      renderLogin(state.returnTo || "#/");
+      var back = lastHash && lastHash !== "#/masuk" ? lastHash : "#/";
+      renderLogin(state.returnTo || back);
       return;
     }
 
     if (!loggedIn) {
-      if (r.name === "new") { renderLogin("#/baru"); return; }
-      var metaFresh = state.meta._at && Date.now() - state.meta._at < 24 * 3600 * 1000;
-      if (!metaFresh) {
-        renderLoading();
-        api("forum_meta").catch(function () {}).then(function () {
-          if (seq === navSeq) route();
-        });
-        state.meta._at = Date.now();
+      if (r.name === "new" || r.name === "edit") { renderLogin(location.hash); return; }
+      if (state.meta.publicRead === false) {
+        /* Admin mematikan baca publik: cek ulang sesekali, siapa tahu sudah dibuka lagi. */
+        var fresh = state.meta._at && Date.now() - state.meta._at < 3600 * 1000;
+        if (!fresh) {
+          renderLoading();
+          api("forum_meta").catch(noop).then(function () {
+            state.meta._at = state.meta._at || Date.now();
+            if (seq === navSeq) route();
+          });
+          return;
+        }
+        renderLogin(location.hash || "#/");
         return;
       }
-      if (!state.meta.publicRead) { renderLogin(location.hash || "#/"); return; }
     }
 
-    if (r.name === "new") { renderNewTopic(); return; }
+    if (r.name === "new") { renderTopicForm("new"); return; }
+    if (r.name === "edit") { loadEdit(r.id, seq); return; }
     if (r.name === "topic") { loadTopic(r.id, seq); return; }
     loadList({ seq: seq });
   }
@@ -794,14 +1001,17 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   function renderLogin(returnTo, notice) {
     if (returnTo && returnTo !== "#/masuk") state.returnTo = returnTo;
     setView("login");
+    setTitle("Masuk");
     renderWho();
     if (location.hash !== "#/masuk" && !notice) history.replaceState(null, "", "#/masuk");
 
     var last = store.get(KEY.lastUser) || "";
+    var canBrowse = state.meta.publicRead !== false;
     app.innerHTML =
       '<section class="login">' +
       '<h1 tabindex="-1">Masuk ke forum</h1>' +
-      '<p class="lead">Pakai username dan password yang sama dengan aplikasi SIM Murojaah.</p>' +
+      '<p class="lead">Pakai username dan password yang sama dengan aplikasi SIM Murojaah. ' +
+      (canBrowse ? "Masuk hanya perlu untuk menulis, membalas, dan mengedit." : "") + "</p>" +
       (notice ? '<p class="note" style="margin:-.5rem 0 1.25rem">' + esc(notice) + "</p>" : "") +
       '<form id="formLogin" novalidate>' +
       '<div class="field"><label for="lUser">Username</label>' +
@@ -812,7 +1022,9 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       "</div></div>" +
       '<p class="form-error" role="alert" hidden></p>' +
       '<button class="btn btn-primary" type="submit">Masuk</button>' +
-      "</form></section>";
+      "</form>" +
+      (canBrowse ? '<p class="hint" style="margin-top:1.25rem"><a href="' + esc(state.returnTo || "#/") + '">Kembali membaca tanpa masuk</a></p>' : "") +
+      "</section>";
 
     var form = $("#formLogin");
     var user = $("#lUser");
@@ -841,10 +1053,12 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
           store.set(KEY.session, state.session);
           store.set(KEY.lastUser, u);
           state.list.loadedAt = 0;
+          state.topic = null;
           renderWho();
           toast("Assalamu’alaikum, " + res.user.nama);
           var target = state.returnTo && state.returnTo !== "#/masuk" ? state.returnTo : "#/";
           state.returnTo = "";
+          state.view = "";
           go(target);
         })
         .catch(function (err) {
@@ -859,6 +1073,7 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   function renderListShell() {
     if (state.view === "list" && $("#topics")) { syncCats(); return; }
     setView("list");
+    setTitle("");
     renderWho();
 
     var L = state.list;
@@ -989,6 +1204,7 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       '<span class="author">' + esc(t.author.nama) + "</span>" +
       "<span>" + esc(t.author.roleLabel) + "</span>" +
       timeTag(t.lastActivityAt) +
+      (t.imageCount ? "<span>" + t.imageCount + " gambar</span>" : "") +
       "</p></div>" +
       '<div class="count"><strong>' + t.replyCount + "</strong><span>balasan</span>" +
       (fresh ? '<span class="fresh">' + esc(fresh) + "</span>" : "") +
@@ -1003,18 +1219,22 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     if (!L.topics.length) {
       var canWrite = !!state.session;
       var cat = catById(L.kategori);
-      var canPostHere = canWrite && (!cat || !cat.adminOnly || (state.session.user && state.session.user.isAdmin));
+      var canPostHere = canWrite && (!cat || !cat.adminOnly || isAdmin());
       var html;
       if (L.q) {
         html = "<h2>Tidak ada topik yang cocok dengan “" + esc(L.q) + "”</h2>" +
           "<p>Coba kata lain, atau kosongkan pencarian untuk melihat semua topik.</p>";
+      } else if (cat && cat.id === "panduan") {
+        html = "<h2>Belum ada panduan</h2>" +
+          "<p>Panduan langkah demi langkah penggunaan SIM Murojaah akan muncul di sini.</p>" +
+          (canPostHere ? '<a class="btn btn-primary" href="#/baru">Tulis panduan</a>' : "");
       } else if (cat) {
         html = "<h2>Belum ada topik di " + esc(cat.label) + "</h2>" +
           "<p>Diskusi pertama di kategori ini bisa dimulai dari pertanyaan kecil.</p>" +
           (canPostHere ? '<a class="btn btn-primary" href="#/baru">Topik baru</a>' : "");
       } else {
         html = "<h2>Forum masih kosong</h2>" +
-          "<p>Tulis topik pertama: pertanyaan tentang metode murojaah, temuan saat setoran, atau kendala aplikasi.</p>" +
+          "<p>Tulis topik pertama: panduan aplikasi, pertanyaan tentang metode murojaah, atau kendala yang ditemui.</p>" +
           (canWrite ? '<a class="btn btn-primary" href="#/baru">Topik baru</a>' : "");
       }
       box.innerHTML = '<div class="state">' + html + "</div>";
@@ -1030,7 +1250,351 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     if (more) more.addEventListener("click", function () { loadMore(more); });
   }
 
-  /* ---------- Tampilan: isi topik ---------- */
+  /* =======================================================
+     EDITOR: Tulis / Pratinjau, sisip gambar, langkah, tebal
+     ======================================================= */
+  function editorHTML(o) {
+    return '<div class="editor">' +
+      '<div class="editor-bar">' +
+      '<div class="editor-tabs" role="tablist" aria-label="Mode penulisan">' +
+      '<button type="button" role="tab" aria-selected="true" data-tab="tulis">Tulis</button>' +
+      '<button type="button" role="tab" aria-selected="false" data-tab="lihat">Pratinjau</button>' +
+      "</div>" +
+      '<div class="editor-tools">' +
+      '<button type="button" class="tool" data-tool="gambar" title="Sisipkan gambar (bisa juga tempel atau seret)">' + ICON_IMG + "<span>Gambar</span></button>" +
+      '<button type="button" class="tool" data-tool="langkah" title="Tambah langkah bernomor">' + ICON_STEP + "<span>Langkah</span></button>" +
+      '<button type="button" class="tool" data-tool="tebal" title="Tebalkan teks (Ctrl+B)" aria-label="Tebal"><b>B</b></button>' +
+      "</div></div>" +
+      '<textarea id="' + o.id + '" maxlength="' + o.max + '" dir="auto"' +
+      (o.placeholder ? ' placeholder="' + esc(o.placeholder) + '"' : "") + ">" + esc(o.value || "") + "</textarea>" +
+      '<div class="editor-preview" hidden></div>' +
+      '<input type="file" accept="image/*" multiple hidden>' +
+      "</div>";
+  }
+
+  function setupEditor(root, o) {
+    o = o || {};
+    var ta = $("textarea", root);
+    var preview = $(".editor-preview", root);
+    var fileInput = $('input[type="file"]', root);
+    var box = $(".editor", root);
+    var pending = 0;
+    var queue = Promise.resolve();
+    var saveTimer = null;
+
+    function changed() {
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+      if (!preview.hidden) renderPreview();
+    }
+    function renderPreview() {
+      preview.innerHTML = ta.value.trim()
+        ? formatBody(ta.value)
+        : '<p class="hint">Belum ada isi untuk dipratinjau.</p>';
+    }
+    function setTab(name) {
+      var showPreview = name === "lihat";
+      Array.prototype.forEach.call(root.querySelectorAll("[data-tab]"), function (b) {
+        b.setAttribute("aria-selected", String(b.dataset.tab === name));
+      });
+      Array.prototype.forEach.call(root.querySelectorAll(".tool"), function (b) { b.disabled = showPreview; });
+      if (showPreview) {
+        renderPreview();
+        preview.style.minHeight = ta.offsetHeight + "px";
+      }
+      ta.hidden = showPreview;
+      preview.hidden = !showPreview;
+      if (!showPreview) ta.focus();
+    }
+
+    function insertBlock(text) {
+      var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
+      var before = v.slice(0, s), after = v.slice(e);
+      var pre = before && !/\n$/.test(before) ? "\n" : "";
+      var post = after.charAt(0) === "\n" ? "" : "\n";
+      ta.value = before + pre + text + post + after;
+      var pos = before.length + pre.length + text.length + 1;
+      ta.setSelectionRange(pos, pos);
+    }
+    function replaceToken(from, to) {
+      var v = ta.value, i = v.indexOf(from);
+      if (i === -1) return;
+      var end = i + from.length;
+      if (!to && v.charAt(end) === "\n") end++;
+      var s = ta.selectionStart, delta = to.length - (end - i);
+      ta.value = v.slice(0, i) + to + v.slice(end);
+      if (s >= end) ta.setSelectionRange(s + delta, s + delta);
+    }
+    function addStep() {
+      var v = ta.value, s = ta.selectionStart;
+      var before = v.slice(0, s);
+      var nums = before.match(/^\s*(\d{1,3})[.)]\s/gm);
+      var n = nums ? parseInt(nums[nums.length - 1], 10) + 1 : 1;
+      var lineStart = before.lastIndexOf("\n") + 1;
+      var prefix = before.slice(lineStart).trim() ? "\n" + n + ". " : n + ". ";
+      ta.setRangeText(prefix, s, ta.selectionEnd, "end");
+      ta.focus();
+      changed();
+    }
+    function makeBold() {
+      var s = ta.selectionStart, e = ta.selectionEnd;
+      var sel = ta.value.slice(s, e) || "teks tebal";
+      ta.setRangeText("**" + sel + "**", s, e, "end");
+      ta.setSelectionRange(s + 2, s + 2 + sel.length);
+      ta.focus();
+      changed();
+    }
+
+    function uploadFiles(list) {
+      var files = Array.prototype.filter.call(list || [], function (f) { return /^image\//.test(f.type); });
+      if (!files.length) { toast("Pilih file gambar (JPG, PNG, WEBP, atau GIF).", true); return; }
+      if (!state.session) { toast("Masuk dulu untuk mengunggah gambar.", true); return; }
+      if (!preview.hidden) setTab("tulis");
+
+      files.forEach(function (file) {
+        var label = String(file.name || "gambar").replace(/[\[\]()\n]/g, "").slice(0, 40);
+        var token = "![Mengunggah " + label + "…](unggah:" + Math.random().toString(36).slice(2, 10) + ")";
+        insertBlock(token);
+        pending++;
+        queue = queue.then(function () {
+          return prepareImage(file)
+            .then(function (img) { return api("forum_upload_image", img); })
+            .then(function (res) {
+              replaceToken(token, "![](gambar:" + res.id + ")");
+              if (res.shared === false && res.message) toast(res.message, true);
+            })
+            .catch(function (err) {
+              replaceToken(token, "");
+              toast((err && err.message) || "Gambar gagal diunggah.", true);
+            })
+            .then(function () { pending--; changed(); });
+        });
+      });
+      changed();
+      toast(files.length > 1 ? "Mengunggah " + files.length + " gambar…" : "Mengunggah gambar…");
+    }
+
+    root.addEventListener("click", function (e) {
+      var tab = e.target.closest("[data-tab]");
+      if (tab && root.contains(tab)) { setTab(tab.dataset.tab); return; }
+      var tool = e.target.closest("[data-tool]");
+      if (!tool || tool.disabled) return;
+      if (tool.dataset.tool === "gambar") fileInput.click();
+      if (tool.dataset.tool === "langkah") addStep();
+      if (tool.dataset.tool === "tebal") makeBold();
+    });
+    fileInput.addEventListener("change", function () {
+      uploadFiles(fileInput.files);
+      fileInput.value = "";
+    });
+    ta.addEventListener("paste", function (e) {
+      var files = e.clipboardData && e.clipboardData.files;
+      if (files && files.length && Array.prototype.some.call(files, function (f) { return /^image\//.test(f.type); })) {
+        e.preventDefault();
+        uploadFiles(files);
+      }
+    });
+    ta.addEventListener("dragover", function (e) {
+      if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") !== -1) {
+        e.preventDefault();
+        box.classList.add("dragging");
+      }
+    });
+    ta.addEventListener("dragleave", function () { box.classList.remove("dragging"); });
+    ta.addEventListener("drop", function (e) {
+      box.classList.remove("dragging");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        e.preventDefault();
+        ta.focus();
+        uploadFiles(e.dataTransfer.files);
+      }
+    });
+    ta.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) { e.preventDefault(); makeBold(); }
+    });
+    if (o.draftKey) {
+      ta.addEventListener("input", function () {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () {
+          if (ta.value.trim()) store.set(o.draftKey, ta.value); else store.del(o.draftKey);
+        }, 400);
+      });
+    }
+
+    return {
+      ta: ta,
+      pending: function () { return pending; },
+      clean: function () { return ta.value.replace(/!\[[^\]\n]*\]\(unggah:[^)\n]*\)\n?/g, "").trim(); },
+      stopDraft: function () { clearTimeout(saveTimer); }
+    };
+  }
+
+  /* Kecilkan gambar di browser sebelum diunggah: sisi terpanjang maks 1600 px, JPEG. */
+  function prepareImage(file) {
+    var maxBytes = limits().gambarBytes || 2097152;
+    if (file.size > 25 * 1024 * 1024) {
+      return Promise.reject(new ApiError("Gambar terlalu besar. Pilih gambar di bawah 25 MB."));
+    }
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new ApiError("File " + file.name + " tidak bisa dibaca sebagai gambar.")); };
+      img.src = url;
+    }).then(function (img) {
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var keepOriginal = /^image\/(png|jpeg|webp)$/.test(file.type) && file.size <= 1024 * 1024 &&
+        Math.max(w, h) <= CONFIG.IMAGE_MAX_SIDE;
+      if (keepOriginal) {
+        return toBase64(file).then(function (data) { return { mimeType: file.type, data: data }; });
+      }
+      var scale = Math.min(1, CONFIG.IMAGE_MAX_SIDE / Math.max(w, h));
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(w * scale));
+      canvas.height = Math.max(1, Math.round(h * scale));
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      return toJpeg(canvas, 0.86)
+        .then(function (blob) { return blob.size > maxBytes ? toJpeg(canvas, 0.65) : blob; })
+        .then(function (blob) {
+          if (blob.size > maxBytes) throw new ApiError("Gambar masih terlalu besar setelah dikecilkan. Potong dulu bagian yang penting saja.");
+          return toBase64(blob).then(function (data) { return { mimeType: "image/jpeg", data: data }; });
+        });
+    });
+  }
+  function toJpeg(canvas, q) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) { b ? resolve(b) : reject(new ApiError("Gambar gagal diproses.")); }, "image/jpeg", q);
+    });
+  }
+  function toBase64(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(String(r.result).split(",")[1] || ""); };
+      r.onerror = function () { reject(new ApiError("Gambar gagal dibaca.")); };
+      r.readAsDataURL(blob);
+    });
+  }
+
+  /* =======================================================
+     BAGIKAN TOPIK
+     ======================================================= */
+  function topicUrl(id) {
+    return location.origin + location.pathname + "#/t/" + encodeURIComponent(id);
+  }
+
+  function shareHTML(t) {
+    var url = topicUrl(t.id);
+    return '<div class="share">' +
+      '<button class="btn btn-quiet btn-small share-btn" type="button" id="btnShare" aria-expanded="false" aria-controls="shareMenu">' +
+      ICON_SHARE + "Bagikan</button>" +
+      '<div class="share-menu" id="shareMenu" hidden>' +
+      '<button type="button" data-share="copy">Salin tautan</button>' +
+      '<a data-share="wa" target="_blank" rel="noopener" href="' + esc("https://wa.me/?text=" + encodeURIComponent(t.judul + "\n" + url)) + '">Kirim lewat WhatsApp</a>' +
+      '<a data-share="tg" target="_blank" rel="noopener" href="' + esc("https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(t.judul)) + '">Kirim lewat Telegram</a>' +
+      (navigator.share ? '<button type="button" data-share="native">Aplikasi lain…</button>' : "") +
+      "</div></div>";
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var t = document.createElement("textarea");
+      t.value = text;
+      t.setAttribute("readonly", "");
+      t.style.position = "fixed";
+      t.style.opacity = "0";
+      document.body.appendChild(t);
+      t.select();
+      try { document.execCommand("copy") ? resolve() : reject(); } catch (e) { reject(e); }
+      t.remove();
+    });
+  }
+
+  function setupShare(t) {
+    var btn = $("#btnShare"), menu = $("#shareMenu");
+    if (!btn || !menu) return;
+    var url = topicUrl(t.id);
+
+    function close(focusBtn) {
+      menu.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+      document.removeEventListener("click", outside, true);
+      document.removeEventListener("keydown", onKey);
+      if (focusBtn) btn.focus();
+    }
+    function outside(e) { if (!e.target.closest(".share")) close(false); }
+    function onKey(e) { if (e.key === "Escape") close(true); }
+
+    btn.addEventListener("click", function () {
+      if (!menu.hidden) { close(false); return; }
+      menu.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+      menu.firstElementChild.focus();
+      setTimeout(function () {
+        document.addEventListener("click", outside, true);
+        document.addEventListener("keydown", onKey);
+      }, 0);
+    });
+
+    menu.addEventListener("click", function (e) {
+      var item = e.target.closest("[data-share]");
+      if (!item) return;
+      var kind = item.dataset.share;
+      if (kind === "copy") {
+        copyText(url).then(function () { toast("Tautan topik disalin"); }, function () { window.prompt("Salin tautan ini:", url); });
+      } else if (kind === "native") {
+        navigator.share({ title: t.judul, text: t.judul, url: url }).catch(noop);
+      }
+      close(false);
+    });
+  }
+
+  /* =======================================================
+     PENAMPIL GAMBAR
+     ======================================================= */
+  var lightbox = document.getElementById("lightbox");
+
+  function openLightbox(id, alt) {
+    var big = driveThumb(id, 2000);
+    var original = "https://drive.google.com/file/d/" + encodeURIComponent(id) + "/view";
+    if (!lightbox || typeof lightbox.showModal !== "function") { window.open(original, "_blank", "noopener"); return; }
+    $("#lbImg").src = big;
+    $("#lbImg").alt = alt || "";
+    $("#lbCap").textContent = alt || "";
+    $("#lbCap").hidden = !alt;
+    $("#lbOpen").href = original;
+    lightbox.showModal();
+    $("#lbClose").focus();
+  }
+
+  if (lightbox) {
+    $("#lbClose").addEventListener("click", function () { lightbox.close(); });
+    lightbox.addEventListener("click", function (e) { if (e.target === lightbox) lightbox.close(); });
+    lightbox.addEventListener("close", function () { $("#lbImg").removeAttribute("src"); });
+  }
+
+  document.addEventListener("click", function (e) {
+    var z = e.target.closest(".shot-zoom");
+    if (z) openLightbox(z.dataset.zoom, z.dataset.alt);
+  });
+
+  /* Gambar yang gagal dimuat (dihapus dari Drive / tidak dibagikan) diganti keterangan. */
+  document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== "IMG" || !img.closest) return;
+    var btn = img.closest(".shot-zoom");
+    if (!btn) return;
+    var note = document.createElement("span");
+    note.className = "shot-missing";
+    note.textContent = "Gambar tidak bisa dimuat. Mungkin sudah dihapus dari Google Drive atau tidak dibagikan ke publik.";
+    btn.replaceWith(note);
+  }, true);
+
+  /* =======================================================
+     TAMPILAN: ISI TOPIK
+     ======================================================= */
   function loadTopic(id, seq, opts) {
     opts = opts || {};
     if (!/^[A-Z0-9]{4,40}$/i.test(id)) {
@@ -1078,15 +1642,16 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   function syncListTopic(t) {
     state.list.topics.forEach(function (row) {
       if (row.id === t.id) {
-        row.replyCount = t.replyCount;
-        row.pinned = t.pinned;
-        row.locked = t.locked;
+        ["replyCount", "pinned", "locked", "judul", "kategori", "imageCount"].forEach(function (k) {
+          if (t[k] !== undefined) row[k] = t[k];
+        });
       }
     });
   }
 
   function renderNotFound(msg) {
     setView("notfound");
+    setTitle("Topik tidak ditemukan");
     app.innerHTML =
       '<a class="back" href="#/">Semua topik</a>' +
       '<div class="state"><h1 class="thread-title">Topik tidak ditemukan</h1>' +
@@ -1095,12 +1660,16 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
   }
 
   function replyItem(r, isNew) {
+    var tools = "";
+    if (r.canEdit) tools += '<button class="link-btn" type="button" data-edit-reply="' + esc(r.id) + '">Edit</button>';
+    if (r.canDelete) tools += '<button class="link-btn danger" type="button" data-del-reply="' + esc(r.id) + '">Hapus</button>';
     return '<li class="reply' + (isNew ? " is-new" : "") + '" id="r-' + esc(r.id) + '">' +
       avatar(r.author) +
       "<div>" +
-      '<div class="reply-head"><strong>' + esc(r.author.nama) + "</strong><span>" + esc(r.author.roleLabel) + "</span>" + timeTag(r.createdAt) + "</div>" +
+      '<div class="reply-head"><strong>' + esc(r.author.nama) + "</strong><span>" + esc(r.author.roleLabel) + "</span>" +
+      timeTag(r.createdAt) + editedTag(r.editedAt) + "</div>" +
       '<div class="reply-body">' + formatBody(r.isi) + "</div>" +
-      (r.canDelete ? '<div class="reply-tools"><button class="link-btn danger" type="button" data-del-reply="' + esc(r.id) + '">Hapus</button></div>' : "") +
+      (tools ? '<div class="reply-tools" style="display:flex;gap:1rem">' + tools + "</div>" : "") +
       "</div></li>";
   }
 
@@ -1112,10 +1681,12 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 
     var d = state.topic;
     var t = d.topic;
-    var limits = state.meta.limits || DEFAULT_META.limits;
+    var lim = limits();
     var draftKey = KEY.draftReply + t.id;
+    setTitle(t.judul);
 
-    var actions = "";
+    var actions = shareHTML(t);
+    if (t.canEdit) actions += '<a class="btn btn-quiet btn-small" href="#/edit/' + encodeURIComponent(t.id) + '">Edit</a>';
     if (d.canModerate) {
       actions +=
         '<button class="btn btn-quiet btn-small" type="button" data-mod="pinned">' + (t.pinned ? "Lepas sematan" : "Sematkan") + "</button>" +
@@ -1128,13 +1699,13 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       composer =
         '<form class="composer" id="formReply" novalidate>' +
         '<label for="replyText">Tulis balasan</label>' +
-        '<textarea id="replyText" maxlength="' + limits.balasan + '" placeholder="Tanggapan, pengalaman, atau jawaban Anda"></textarea>' +
+        editorHTML({ id: "replyText", max: lim.balasan, placeholder: "Tanggapan, pengalaman, atau jawaban Anda" }) +
         '<p class="form-error" role="alert" hidden></p>' +
         '<div class="form-foot"><span class="hint counter" data-for="replyText"></span>' +
         '<button class="btn btn-primary" type="submit">Kirim balasan</button></div>' +
         "</form>";
     } else if (!state.session) {
-      composer = '<p class="note"><a href="#/masuk">Masuk</a> untuk ikut membalas topik ini.</p>';
+      composer = '<p class="note"><a href="#/masuk">Masuk</a> untuk ikut membalas diskusi ini.</p>';
     } else {
       composer = '<p class="note">Topik ini sudah dikunci admin. Balasan baru ditutup.</p>';
     }
@@ -1148,31 +1719,34 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       (t.pinned ? STAR + '<span class="sr-only">Disematkan: </span>' : "") + esc(t.judul) +
       (t.locked ? LOCK + '<span class="sr-only"> (dikunci)</span>' : "") + "</h1>" +
       '<div class="byline">' + avatar(t.author) +
-      "<div><strong>" + esc(t.author.nama) + '</strong><span class="sub">' + esc(t.author.roleLabel) + ", " + timeTag(t.createdAt) + "</span></div></div>" +
+      "<div><strong>" + esc(t.author.nama) + '</strong><span class="sub">' + esc(t.author.roleLabel) + ", " +
+      timeTag(t.createdAt) + (t.editedAt ? ", " + editedTag(t.editedAt) : "") + "</span></div></div>" +
       "</header>" +
       '<div class="post-body">' + formatBody(t.isi) + "</div>" +
-      (actions ? '<div class="thread-actions">' + actions + "</div>" : "") +
+      '<div class="thread-actions">' + actions + "</div>" +
       '<section aria-labelledby="repliesTitle">' +
       '<div class="replies-head"><h2 id="repliesTitle">' + repliesTitle(d.replies.length) + "</h2>" +
       '<button class="link-btn" type="button" id="btnRefresh">Muat balasan terbaru</button></div>' +
-      (d.replies.length
-        ? '<ol class="reply-list" id="replyList">' + d.replies.map(function (r) { return replyItem(r); }).join("") + "</ol>"
-        : '<ol class="reply-list" id="replyList"></ol><p class="no-replies" id="noReplies">Jadilah yang pertama menanggapi.</p>') +
+      '<ol class="reply-list" id="replyList">' + d.replies.map(function (r) { return replyItem(r); }).join("") + "</ol>" +
+      (d.replies.length ? "" : '<p class="no-replies" id="noReplies">Jadilah yang pertama menanggapi.</p>') +
       "</section>" +
       composer +
       "</article>";
 
     if (focus) { window.scrollTo(0, 0); focusHeading(); }
 
+    setupShare(t);
+
     $("#btnRefresh").addEventListener("click", function () {
-      var btn = this;
-      setBusy(btn, true, "Memuat…");
+      setBusy(this, true, "Memuat…");
       loadTopic(t.id, navSeq, { silent: true });
     });
 
     $("#replyList").addEventListener("click", function (e) {
-      var b = e.target.closest("[data-del-reply]");
-      if (b) deleteReply(b.dataset.delReply, b);
+      var del = e.target.closest("[data-del-reply]");
+      if (del) { deleteReply(del.dataset.delReply, del); return; }
+      var ed = e.target.closest("[data-edit-reply]");
+      if (ed) startEditReply(ed.dataset.editReply);
     });
 
     Array.prototype.forEach.call(document.querySelectorAll("[data-mod]"), function (b) {
@@ -1184,27 +1758,21 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 
     var form = $("#formReply");
     if (form) {
-      var ta = $("#replyText");
-      ta.value = store.get(draftKey) || "";
-      bindCounter(ta, limits.balasan);
-      submitOnCtrlEnter(ta, form);
-      var saveTimer = null;
-      ta.addEventListener("input", function () {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(function () {
-          if (ta.value.trim()) store.set(draftKey, ta.value); else store.del(draftKey);
-        }, 400);
-      });
+      var editor = setupEditor(form, { draftKey: draftKey });
+      editor.ta.value = store.get(draftKey) || "";
+      bindCounter(editor.ta, lim.balasan);
+      submitOnCtrlEnter(editor.ta, form);
       form.addEventListener("submit", function (e) {
         e.preventDefault();
-        submitReply(form, ta, draftKey);
+        submitReply(form, editor, draftKey);
       });
     }
   }
 
-  function submitReply(form, ta, draftKey) {
-    var text = ta.value.trim();
-    if (!text) { showFormError(form, "Balasan masih kosong."); ta.focus(); return; }
+  function submitReply(form, editor, draftKey) {
+    if (editor.pending()) { showFormError(form, "Tunggu sampai semua gambar selesai diunggah."); return; }
+    var text = editor.clean();
+    if (!text) { showFormError(form, "Balasan masih kosong."); editor.ta.focus(); return; }
     showFormError(form, "");
 
     var btn = $('button[type="submit"]', form);
@@ -1214,8 +1782,9 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     api("forum_create_reply", { topicId: topic.id, isi: text })
       .then(function (res) {
         setBusy(btn, false);
-        ta.value = "";
-        ta.dispatchEvent(new Event("input"));
+        editor.stopDraft();
+        editor.ta.value = "";
+        editor.ta.dispatchEvent(new Event("input"));
         store.del(draftKey);
 
         state.topic.replies.push(res.reply);
@@ -1228,6 +1797,8 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
         if (empty) empty.remove();
         $("#replyList").insertAdjacentHTML("beforeend", replyItem(res.reply, true));
         $("#repliesTitle").textContent = repliesTitle(state.topic.replies.length);
+        var tabTulis = $('[data-tab="tulis"]', form);
+        if (tabTulis) tabTulis.click();
         toast("Balasan terkirim");
       })
       .catch(function (err) {
@@ -1235,6 +1806,68 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
         if (err.info && err.info.auth) { handleError(err); return; }
         showFormError(form, err.message);
       });
+  }
+
+  function startEditReply(id) {
+    var r = null;
+    state.topic.replies.forEach(function (x) { if (x.id === id) r = x; });
+    var li = document.getElementById("r-" + id);
+    if (!r || !li || li.querySelector(".reply-edit")) return;
+
+    var body = $(".reply-body", li), tools = $(".reply-tools", li);
+    var taId = "edit-" + id;
+    var lim = limits();
+    var form = document.createElement("form");
+    form.className = "reply-edit";
+    form.noValidate = true;
+    form.innerHTML =
+      '<label class="sr-only" for="' + taId + '">Edit balasan</label>' +
+      editorHTML({ id: taId, max: lim.balasan, value: r.isi }) +
+      '<p class="form-error" role="alert" hidden></p>' +
+      '<div class="form-foot"><span class="hint counter" data-for="' + taId + '"></span>' +
+      '<div class="btn-row"><button type="button" class="btn btn-quiet btn-small" data-cancel>Batal</button>' +
+      '<button type="submit" class="btn btn-primary btn-small">Simpan</button></div></div>';
+
+    body.hidden = true;
+    if (tools) tools.hidden = true;
+    body.parentNode.insertBefore(form, body.nextSibling);
+
+    var editor = setupEditor(form, {});
+    bindCounter(editor.ta, lim.balasan);
+    submitOnCtrlEnter(editor.ta, form);
+    editor.ta.focus();
+    editor.ta.setSelectionRange(editor.ta.value.length, editor.ta.value.length);
+
+    function cancel() {
+      form.remove();
+      body.hidden = false;
+      if (tools) tools.hidden = false;
+    }
+    $("[data-cancel]", form).addEventListener("click", function () {
+      if (editor.ta.value !== r.isi && !confirm("Buang perubahan pada balasan ini?")) return;
+      cancel();
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (editor.pending()) { showFormError(form, "Tunggu sampai semua gambar selesai diunggah."); return; }
+      var text = editor.clean();
+      if (!text) { showFormError(form, "Balasan tidak boleh kosong."); return; }
+      if (text === r.isi) { cancel(); return; }
+      var btn = $('button[type="submit"]', form);
+      setBusy(btn, true, "Menyimpan…");
+      api("forum_update_reply", { replyId: id, isi: text })
+        .then(function (res) {
+          r.isi = res.reply.isi;
+          r.editedAt = res.reply.editedAt;
+          li.outerHTML = replyItem(r);
+          toast("Balasan diperbarui");
+        })
+        .catch(function (err) {
+          setBusy(btn, false);
+          if (err.info && err.info.auth) { handleError(err); return; }
+          showFormError(form, err.message);
+        });
+    });
   }
 
   function deleteReply(id, btn) {
@@ -1284,6 +1917,10 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
     api("forum_moderate", { topicId: t.id, field: field, value: value })
       .then(function () {
         t[field] = value;
+        if (field === "locked") {
+          t.canEdit = isAdmin() || (t.isMine && !value);
+          state.topic.canReply = !value || isAdmin();
+        }
         syncListTopic(t);
         state.list.loadedAt = 0;
         renderTopic(false);
@@ -1297,85 +1934,147 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
       });
   }
 
-  /* ---------- Tampilan: topik baru ---------- */
-  function renderNewTopic() {
-    setView("new");
+  /* =======================================================
+     TAMPILAN: TULIS / EDIT TOPIK
+     ======================================================= */
+  function loadEdit(id, seq) {
+    if (!/^[A-Z0-9]{4,40}$/i.test(id)) { renderNotFound("Alamat topik ini tidak valid."); return; }
+    if (state.topic && state.topic.topic.id === id) {
+      if (!state.topic.topic.canEdit) { renderNotFound("Anda tidak punya izin mengedit topik ini."); return; }
+      renderTopicForm("edit", state.topic.topic);
+      return;
+    }
+    setView("edit-loading");
+    app.innerHTML = skeleton(3);
+    api("forum_get_topic", { topicId: id })
+      .then(function (res) {
+        if (seq !== navSeq) return;
+        state.topic = res;
+        state.topicLoadedAt = Date.now();
+        if (!res.topic.canEdit) { renderNotFound("Anda tidak punya izin mengedit topik ini."); return; }
+        renderTopicForm("edit", res.topic);
+      })
+      .catch(function (err) {
+        if (seq !== navSeq) return;
+        if (err.info && err.info.notFound) { renderNotFound(err.message); return; }
+        handleError(err, app, function () { loadEdit(id, navSeq); });
+      });
+  }
+
+  function renderTopicForm(mode, topic) {
+    var isEdit = mode === "edit";
+    setView(isEdit ? "edit" : "new");
+    setTitle(isEdit ? "Edit topik" : "Topik baru");
     renderWho();
 
-    var user = state.session.user || {};
-    var limits = state.meta.limits || DEFAULT_META.limits;
-    var cats = (state.meta.categories || []).filter(function (c) { return !c.adminOnly || user.isAdmin; });
-    var draft = store.get(KEY.draftTopic) || {};
+    var lim = limits();
+    var admin = isAdmin();
+    var cats = (state.meta.categories || []).filter(function (c) {
+      return !c.adminOnly || admin || (isEdit && c.id === topic.kategori);
+    });
+    var draft = isEdit
+      ? { kategori: topic.kategori, judul: topic.judul, isi: topic.isi }
+      : (store.get(KEY.draftTopic) || {});
     var preset = draft.kategori ||
       (cats.some(function (c) { return c.id === state.list.kategori; }) ? state.list.kategori : "");
+    var backHref = isEdit ? "#/t/" + encodeURIComponent(topic.id) : "#/";
 
     app.innerHTML =
       '<form class="compose" id="formTopic" novalidate>' +
-      '<a class="back" href="#/">Batal</a>' +
-      '<h1 tabindex="-1">Topik baru</h1>' +
+      '<a class="back" href="' + backHref + '" id="formBack">Batal</a>' +
+      '<h1 tabindex="-1">' + (isEdit ? "Edit topik" : "Topik baru") + "</h1>" +
       '<div class="field"><label for="fKat">Kategori</label>' +
       '<select id="fKat" required><option value="">Pilih kategori</option>' +
       cats.map(function (c) {
         return '<option value="' + esc(c.id) + '"' + (c.id === preset ? " selected" : "") + ">" + esc(c.label) + "</option>";
       }).join("") +
-      "</select></div>" +
+      "</select>" +
+      '<p class="hint" id="katHint" hidden>Untuk panduan: tekan <b>Langkah</b> untuk menomori tiap langkah, lalu sisipkan tangkapan layar tepat di bawahnya.</p></div>' +
       '<div class="field"><label for="fJudul">Judul</label>' +
-      '<input id="fJudul" type="text" maxlength="' + limits.judul + '" autocomplete="off" dir="auto" ' +
-      'placeholder="Contoh: Santri sering tersendat di pergantian halaman" value="' + esc(draft.judul || "") + '" required></div>' +
+      '<input id="fJudul" type="text" maxlength="' + lim.judul + '" autocomplete="off" dir="auto" ' +
+      'placeholder="Contoh: Cara mencatat setoran murojaah harian" value="' + esc(draft.judul || "") + '" required></div>' +
       '<div class="field"><label for="fIsi">Isi</label>' +
-      '<textarea id="fIsi" maxlength="' + limits.isi + '" dir="auto" required>' + esc(draft.isi || "") + "</textarea>" +
-      '<p class="hint">Ayat atau hadits yang ditulis dengan huruf Arab tampil dari kanan ke kiri dengan sendirinya. ' +
-      "Pisahkan paragraf dengan satu baris kosong.</p></div>" +
+      editorHTML({ id: "fIsi", max: lim.isi, value: draft.isi || "" }) +
+      '<p class="hint">Gambar bisa disisipkan lewat tombol Gambar, ditempel (Ctrl+V), atau diseret ke kotak isi. ' +
+      "Tulis keterangan gambar di antara tanda [ ]. Ayat berhuruf Arab tampil dari kanan ke kiri dengan sendirinya.</p></div>" +
       '<p class="form-error" role="alert" hidden></p>' +
       '<div class="form-foot"><span class="hint counter" data-for="fIsi"></span>' +
-      '<button class="btn btn-primary" type="submit">Terbitkan topik</button></div>' +
+      '<button class="btn btn-primary" type="submit">' + (isEdit ? "Simpan perubahan" : "Terbitkan topik") + "</button></div>" +
       "</form>";
 
     window.scrollTo(0, 0);
     focusHeading();
 
     var form = $("#formTopic");
-    var fKat = $("#fKat"), fJudul = $("#fJudul"), fIsi = $("#fIsi");
-    bindCounter(fIsi, limits.isi);
+    var fKat = $("#fKat"), fJudul = $("#fJudul");
+    var editor = setupEditor(form, {});
+    var fIsi = editor.ta;
+    bindCounter(fIsi, lim.isi);
     submitOnCtrlEnter(fIsi, form);
 
+    function syncHint() { $("#katHint").hidden = fKat.value !== "panduan"; }
+    fKat.addEventListener("change", syncHint);
+    syncHint();
+
+    function snapshot() { return { kategori: fKat.value, judul: fJudul.value, isi: fIsi.value }; }
+    var original = JSON.stringify(snapshot());
     var saveTimer = null;
-    form.addEventListener("input", function () {
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(function () {
-        store.set(KEY.draftTopic, { kategori: fKat.value, judul: fJudul.value, isi: fIsi.value });
-      }, 400);
+    if (!isEdit) {
+      form.addEventListener("input", function () {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () { store.set(KEY.draftTopic, snapshot()); }, 400);
+      });
+    }
+
+    $("#formBack").addEventListener("click", function (e) {
+      if (isEdit && JSON.stringify(snapshot()) !== original && !confirm("Buang perubahan yang belum disimpan?")) {
+        e.preventDefault();
+      }
     });
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var judul = fJudul.value.trim().replace(/\s+/g, " ");
-      var isi = fIsi.value.trim();
 
       if (!fKat.value) { showFormError(form, "Pilih kategori topik."); fKat.focus(); return; }
-      if (judul.length < limits.judulMin) {
-        showFormError(form, "Judul minimal " + limits.judulMin + " karakter."); fJudul.focus(); return;
+      if (judul.length < lim.judulMin) {
+        showFormError(form, "Judul minimal " + lim.judulMin + " karakter."); fJudul.focus(); return;
       }
+      if (editor.pending()) { showFormError(form, "Tunggu sampai semua gambar selesai diunggah."); return; }
+      var isi = editor.clean();
       if (!isi) { showFormError(form, "Isi topik masih kosong."); fIsi.focus(); return; }
       showFormError(form, "");
 
       var btn = $('button[type="submit"]', form);
-      setBusy(btn, true, "Menerbitkan…");
+      setBusy(btn, true, isEdit ? "Menyimpan…" : "Menerbitkan…");
 
-      api("forum_create_topic", { kategori: fKat.value, judul: judul, isi: isi })
+      var request = isEdit
+        ? api("forum_update_topic", { topicId: topic.id, kategori: fKat.value, judul: judul, isi: isi })
+        : api("forum_create_topic", { kategori: fKat.value, judul: judul, isi: isi });
+
+      request
         .then(function (res) {
           clearTimeout(saveTimer);
-          store.del(KEY.draftTopic);
-          markSeen(res.topic.id, 0);
           state.list.loadedAt = 0;
-          state.prefetched = res;
-          toast("Topik diterbitkan");
-          go("#/t/" + encodeURIComponent(res.topic.id));
+          if (isEdit) {
+            var cur = state.topic;
+            Object.assign(cur.topic, res.topic);
+            syncListTopic(cur.topic);
+            state.prefetched = cur;
+            toast("Perubahan disimpan");
+            go("#/t/" + encodeURIComponent(topic.id));
+          } else {
+            store.del(KEY.draftTopic);
+            markSeen(res.topic.id, 0);
+            state.prefetched = res;
+            toast("Topik diterbitkan");
+            go("#/t/" + encodeURIComponent(res.topic.id));
+          }
         })
         .catch(function (err) {
           setBusy(btn, false);
           if (err.info && err.info.auth) {
-            store.set(KEY.draftTopic, { kategori: fKat.value, judul: fJudul.value, isi: fIsi.value });
+            if (!isEdit) store.set(KEY.draftTopic, snapshot());
             handleError(err);
             return;
           }
@@ -1386,20 +2085,24 @@ textarea { resize: vertical; min-height: 7rem; line-height: 1.65; }
 
   /* ---------- Segarkan saat tab kembali aktif ---------- */
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState !== "visible" || !state.session) return;
+    if (document.visibilityState !== "visible") return;
 
     if (state.view === "list" && Date.now() - state.list.loadedAt > CONFIG.STALE_MS) {
       loadList({ force: true, quiet: true });
     }
 
     if (state.view === "topic" && state.topic && Date.now() - state.topicLoadedAt > CONFIG.STALE_MS) {
-      var ta = $("#replyText");
-      var typing = ta && (ta.value.trim() || document.activeElement === ta);
-      if (!typing) loadTopic(state.topic.topic.id, navSeq, { silent: true });
+      var busy = Array.prototype.some.call(document.querySelectorAll("#app textarea"), function (ta) {
+        return ta.value.trim() || document.activeElement === ta;
+      });
+      if (!busy) loadTopic(state.topic.topic.id, navSeq, { silent: true });
     }
   });
 
-  window.addEventListener("hashchange", route);
+  window.addEventListener("hashchange", function (e) {
+    try { lastHash = new URL(e.oldURL).hash; } catch (x) { lastHash = ""; }
+    route();
+  });
 
   applyMeta(state.meta, false);
   renderWho();
