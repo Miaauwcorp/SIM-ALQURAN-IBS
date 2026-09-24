@@ -278,20 +278,20 @@
       font-variant-numeric: tabular-nums;
     }
     .juz-cell.mur {
-      background: repeating-linear-gradient(135deg, rgba(233,207,149,.28) 0 4px, transparent 4px 8px);
-      border-color: rgba(233,207,149,.55);
-      color: #f3e3bd;
-    }
-    .juz-cell.ziy {
       background: #e9cf95;
       border-color: #e9cf95;
       color: var(--deep);
     }
+    .juz-cell.ziy {
+      background: repeating-linear-gradient(135deg, rgba(233,207,149,.28) 0 4px, transparent 4px 8px);
+      border-color: rgba(233,207,149,.55);
+      color: #f3e3bd;
+    }
     .juz-cell:disabled { cursor: default; }
     .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; font-size: 13px; opacity: .85; }
     .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
-    .legend .l-ziy { background: #e9cf95; }
-    .legend .l-mur { background: repeating-linear-gradient(135deg, rgba(233,207,149,.6) 0 3px, transparent 3px 6px); border: 1px solid rgba(233,207,149,.6); }
+    .legend .l-ziy { background: repeating-linear-gradient(135deg, rgba(233,207,149,.6) 0 3px, transparent 3px 6px); border: 1px solid rgba(233,207,149,.6); }
+    .legend .l-mur { background: #e9cf95; }
     .legend .l-none { border: 1px solid rgba(255,255,255,.3); }
 
     /* ---- Tiga jalur setoran ---- */
@@ -925,7 +925,7 @@
       var juzCells = "";
       for (var j = 1; j <= 30; j++) {
         var cell = jm[j];
-        var cls = cell.ziyadah.length ? "ziy" : (cell.murojaah.length ? "mur" : "");
+        var cls = cell.murojaah.length ? "mur" : (cell.ziyadah.length ? "ziy" : "");
         var label = "Juz " + j + ": " + cell.ziyadah.length + " setoran ziyadah, " + cell.murojaah.length + " murojaah";
         juzCells += '<button type="button" class="juz-cell ' + cls + '" data-juz="' + j + '" aria-label="' + esc(label) + '" title="' + esc(label) + '"' +
           (cls ? "" : " disabled") + ">" + j + "</button>";
@@ -991,8 +991,8 @@
           '<div class="mushaf-top">' +
             "<div>" +
               '<h2 id="mushafTitle" class="sr-only">Peta setoran 30 juz</h2>' +
-              '<div class="juz-big">' + num(z.estimatedJuzCount, 1) + "<small>dari " + num(targetJuz, 0) + " juz</small></div>" +
-              '<div class="juz-caption">Estimasi ziyadah pada ' + esc(d.periode.label.toLowerCase() === "semua periode" ? "seluruh periode" : "periode " + d.periode.label) + ". Ketuk kotak juz untuk melihat setorannya.</div>" +
+              '<div class="juz-big">' + num(m.totalHalaman, 1) + "<small>halaman murojaah</small></div>" +
+              '<div class="juz-caption">Total murojaah pada ' + esc(d.periode.label.toLowerCase() === "semua periode" ? "seluruh periode" : "periode " + d.periode.label) + ". Ketuk kotak juz untuk melihat setorannya.</div>" +
             "</div>" +
             '<div class="figs">' +
               '<div class="fig"><b>' + juzTouched + "</b><span>juz tersentuh</span></div>" +
@@ -1002,8 +1002,8 @@
           "</div>" +
           '<div class="juz-grid">' + juzCells + "</div>" +
           '<div class="legend">' +
-            '<span><i class="l-ziy"></i>Ada setoran ziyadah</span>' +
-            '<span><i class="l-mur"></i>Hanya murojaah</span>' +
+            '<span><i class="l-mur"></i>Ada setoran murojaah</span>' +
+            '<span><i class="l-ziy"></i>Hanya ziyadah</span>' +
             '<span><i class="l-none"></i>Belum ada setoran</span>' +
           "</div>" +
         "</section>" +
@@ -1037,7 +1037,7 @@
         "</div>" +
 
         '<section class="panel" aria-labelledby="haditsTitle">' +
-          '<div class="panel-head"><div><h2 id="haditsTitle">Hadits yang sudah disetorkan</h2><p class="panel-sub">' + hCount + " dari " + targetHadits + " hadits.</p></div></div>" +
+          '<div class="panel-head"><div><h2 id="haditsTitle">Hadits yang sudah disetorkan</h2><p class="panel-sub">' + hCount + " dari " + targetHadits + " hadits.</p></div></div>' +
           '<div class="hadits-grid">' + hCells + "</div>" +
         "</section>" +
 
