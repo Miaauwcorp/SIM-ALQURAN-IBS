@@ -718,7 +718,13 @@
       PARSE: "Server belum siap"
     };
 
-    /* ---------- Log masuk portal (berjalan setelah dashboard tampil) ---------- */
+    /* ---------- Log masuk portal (berjalan setelah dashboard tampil) ----------
+     * Format Device Info sama dengan Log_Login aplikasi utama.
+     * Semua pengumpulan data (merk, model, IP, lokasi IP) dilakukan
+     * SETELAH dashboard tampil dan tidak pernah ditunggu oleh santri.
+     */
+    var CLIENT_ID_KEY = "simSantriPortal.clientId";
+
     function makeEventId() {
       try {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, "");
@@ -726,49 +732,234 @@
       return Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
     }
 
-    function collectDeviceInfo() {
-      var n = navigator;
-      var s = window.screen || {};
-      var c = n.connection || n.mozConnection || n.webkitConnection || null;
-      var uad = n.userAgentData || null;
-      var tz = "";
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { }
-
-      var standalone = false;
+    function makeUuid() {
       try {
-        standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || n.standalone === true;
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
       } catch (e) { }
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (ch) {
+        var r = Math.random() * 16 | 0;
+        return (ch === "x" ? r : (r & 3 | 8)).toString(16);
+      });
+    }
 
-      var conn = "";
-      if (c) {
-        conn = [
-          c.effectiveType || "",
-          c.downlink ? c.downlink + " Mbps" : "",
-          c.saveData ? "hemat data" : ""
-        ].filter(Boolean).join(" · ");
+    /* ID tetap per perangkat/browser, disimpan di localStorage */
+    function getClientId() {
+      try {
+        var id = localStorage.getItem(CLIENT_ID_KEY);
+        if (!id || !/^[A-Za-z0-9-]{16,64}$/.test(id)) {
+          id = makeUuid();
+          localStorage.setItem(CLIENT_ID_KEY, id);
+        }
+        return id;
+      } catch (e) {
+        return makeUuid();
+      }
+    }
+
+    /* Nilai tag tidak boleh mengandung [ ] < > atau baris baru */
+    function tagSafe(v) {
+      var s = String(v == null ? "" : v).replace(/[\[\]<>\r\n]/g, " ").replace(/\s+/g, " ").trim();
+      return s || "-";
+    }
+
+    function withTimeout(promise, ms, fallback) {
+      return new Promise(function (resolve) {
+        var done = false;
+        var t = setTimeout(function () { if (!done) { done = true; resolve(fallback); } }, ms);
+        Promise.resolve(promise).then(function (v) {
+          if (!done) { done = true; clearTimeout(t); resolve(v); }
+        }, function () {
+          if (!done) { done = true; clearTimeout(t); resolve(fallback); }
+        });
+      });
+    }
+
+    /* Data tambahan dari Chrome/Edge/Android: model HP, versi OS, arsitektur */
+    function getHighEntropy() {
+      var uad = navigator.userAgentData;
+      if (!uad || !uad.getHighEntropyValues) return Promise.resolve({});
+      return withTimeout(
+        uad.getHighEntropyValues(["platform", "platformVersion", "architecture", "bitness", "model", "fullVersionList", "mobile"]),
+        1500, {}
+      );
+    }
+
+    function fetchJson(url, ms) {
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var t = setTimeout(function () { if (ctrl) ctrl.abort(); }, ms);
+      return fetch(url, { cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+        .finally(function () { clearTimeout(t); });
+    }
+
+    /* IP publik, lokasi IP, dan ISP. Sama seperti login utama: ipapi.co, cadangan ipify */
+    function getNetworkInfo() {
+      var info = { ip: "", loc: "", isp: "", tz: "" };
+      return fetchJson("https://ipapi.co/json/", 4000)
+        .then(function (d) {
+          if (!d || d.error) throw new Error("ipapi");
+          info.ip = d.ip || "";
+          info.loc = [d.city, d.region, d.country_name].filter(Boolean).join(", ");
+          info.isp = d.org || d.asn || "";
+          info.tz = d.timezone || "";
+          return info;
+        })
+        .catch(function () {
+          return fetchJson("https://api.ipify.org?format=json", 3000)
+            .then(function (d) { info.ip = (d && d.ip) || ""; return info; })
+            .catch(function () { return info; });
+        });
+    }
+
+    /* Merk dari kode model. Kode model Android jarang menyebut merk secara langsung. */
+    function detectBrand(model, ua) {
+      var m = String(model || "");
+      var rules = [
+        [/^SM-|^GT-|^SCH-|Galaxy|Samsung/i, "Samsung"],
+        [/^RMX|realme/i, "realme"],
+        [/^CPH|^OPPO|^PH[A-Z]M/i, "OPPO"],
+        [/^V2\d{3}|^vivo|^I2\d{3}/i, "vivo"],
+        [/Redmi|POCO|^Mi |^MI |Xiaomi|^M2\d{3}|^2\d{3}[0-9A-Z]{4,}|^\d{5}[A-Z0-9]{3,}/i, "Xiaomi"],
+        [/Infinix|^X6\d{2}/i, "Infinix"],
+        [/TECNO/i, "Tecno"],
+        [/itel/i, "itel"],
+        [/Pixel/i, "Google"],
+        [/moto|Motorola|^XT\d/i, "Motorola"],
+        [/ASUS|ZenFone|ROG/i, "ASUS"],
+        [/Nokia|^TA-\d/i, "Nokia"],
+        [/HUAWEI|^HONOR|^[A-Z]{3}-(L|AL|LX|NX)\d/i, "Huawei/Honor"],
+        [/OnePlus|^KB2|^LE2|^NE2|^IN2|^HD1/i, "OnePlus"],
+        [/Lenovo|^TB-/i, "Lenovo"],
+        [/^LM-|^LG/i, "LG"],
+        [/Advan/i, "Advan"],
+        [/Nothing|^A06[35]/i, "Nothing"]
+      ];
+      for (var i = 0; i < rules.length; i++) if (rules[i][0].test(m)) return rules[i][1];
+      if (/iPhone|iPad|iPod|Macintosh/i.test(ua)) return "Apple";
+      return "";
+    }
+
+    function buildDeviceInfo(he, net) {
+      var ua = navigator.userAgent || "";
+      var uad = navigator.userAgentData || null;
+      var touch = navigator.maxTouchPoints || 0;
+      var match;
+
+      /* Jenis perangkat */
+      var type = "Desktop";
+      if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) ||
+          (/Macintosh/i.test(ua) && touch > 1)) type = "Tablet";
+      else if ((he.mobile === true) || (uad && uad.mobile) || /Mobi|iPhone|iPod|Android.*Mobile/i.test(ua)) type = "Mobile";
+
+      /* OS dan versinya */
+      var os = "-", osVer = "";
+      if (/Android/i.test(ua)) { os = "Android"; osVer = (ua.match(/Android\s([\d.]+)/i) || [])[1] || ""; }
+      else if (/iPhone|iPod/i.test(ua)) { os = "iOS"; }
+      else if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && touch > 1)) { os = "iPadOS"; }
+      else if (/Windows/i.test(ua)) { os = "Windows"; }
+      else if (/CrOS/i.test(ua)) { os = "ChromeOS"; }
+      else if (/Macintosh|Mac OS/i.test(ua)) { os = "macOS"; }
+      else if (/Linux/i.test(ua)) { os = "Linux"; }
+      if (os === "iOS" || os === "iPadOS") {
+        match = ua.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))?/i) || ua.match(/Version\/([\d.]+)/i);
+        if (match) osVer = match[2] ? match[1] + "." + match[2] + (match[3] ? "." + match[3] : "") : match[1];
+      }
+      if (he.platformVersion) osVer = he.platformVersion;
+
+      /* Browser dan versinya. Aplikasi dalam (in-app) dicek dulu. */
+      var browser = "-", bVer = "";
+      var inApp = [
+        [/FBAN|FBAV|FB_IAB/i, "Facebook", /FBAV\/([\d.]+)/i],
+        [/Instagram/i, "Instagram", /Instagram ([\d.]+)/i],
+        [/TikTok|musical_ly|BytedanceWebview/i, "TikTok", /(?:TikTok|musical_ly)[ _\/]([\d.]+)/i],
+        [/\bLine\//i, "LINE", /Line\/([\d.]+)/i]
+      ];
+      for (var i = 0; i < inApp.length; i++) {
+        if (inApp[i][0].test(ua)) {
+          browser = inApp[i][1] + " (in-app)";
+          bVer = (ua.match(inApp[i][2]) || [])[1] || "";
+          break;
+        }
+      }
+      if (browser === "-" && he.fullVersionList && he.fullVersionList.length) {
+        var names = { "Microsoft Edge": "Edge", "Google Chrome": "Chrome", "Opera": "Opera", "Opera GX": "Opera GX",
+          "Samsung Internet": "Samsung Internet", "Brave": "Brave", "YaBrowser": "Yandex", "Android WebView": "Android WebView" };
+        var picked = null;
+        he.fullVersionList.forEach(function (b) {
+          if (!picked && names[b.brand]) picked = { name: names[b.brand], ver: b.version };
+        });
+        if (!picked) he.fullVersionList.forEach(function (b) {
+          if (!picked && b.brand === "Chromium") picked = { name: "Chromium", ver: b.version };
+        });
+        if (picked) { browser = picked.name; bVer = picked.ver; }
+      }
+      if (browser === "-") {
+        var rules = [
+          [/Edg(?:e|A|iOS)?\/([\d.]+)/i, "Edge"],
+          [/(?:OPR|Opera)\/([\d.]+)/i, "Opera"],
+          [/SamsungBrowser\/([\d.]+)/i, "Samsung Internet"],
+          [/UCBrowser\/([\d.]+)/i, "UC Browser"],
+          [/MiuiBrowser\/([\d.]+)/i, "Mi Browser"],
+          [/(?:Firefox|FxiOS)\/([\d.]+)/i, "Firefox"],
+          [/CriOS\/([\d.]+)/i, "Chrome"],
+          [/; wv\).*Chrome\/([\d.]+)/i, "Android WebView"],
+          [/Chrome\/([\d.]+)/i, "Chrome"],
+          [/Version\/([\d.]+).*Safari/i, "Safari"]
+        ];
+        for (var j = 0; j < rules.length; j++) {
+          match = ua.match(rules[j][0]);
+          if (match) { browser = rules[j][1]; bVer = match[1]; break; }
+        }
       }
 
+      /* Model: dari Client Hints dulu, lalu dari user agent lama */
+      var model = he.model || "";
+      if (!model) {
+        match = ua.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build\/|\))/i);
+        if (match && match[1] && match[1] !== "K" && !/^(wv|Linux|U)$/i.test(match[1])) model = match[1];
+      }
+      if (!model && /iPhone/i.test(ua)) model = "iPhone";
+      if (!model && os === "iPadOS") model = "iPad";
+      var brand = detectBrand(model, ua);
+
+      /* Arsitektur */
+      var arch = he.architecture || "";
+      var bit = he.bitness || "";
+      if (!arch) {
+        if (/x86_64|x64|Win64|WOW64|amd64/i.test(ua)) { arch = "x86"; bit = bit || "64"; }
+        else if (/aarch64|arm64/i.test(ua)) { arch = "arm"; bit = bit || "64"; }
+        else if (/armv7|armv8|arm/i.test(ua)) { arch = "arm"; }
+        else if (/i[3-6]86|x86/i.test(ua)) { arch = "x86"; bit = bit || "32"; }
+      }
+
+      var tz = net.tz;
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) { }
+
+      return "Device Info: " + ua.replace(/[\[\]\r\n]/g, " ") +
+        " [CLIENT_ID:" + tagSafe(getClientId()) + "]" +
+        " [OS:" + tagSafe(os) + "]" +
+        " [OS_VERSION:" + tagSafe(osVer) + "]" +
+        " [BROWSER:" + tagSafe(browser) + "]" +
+        " [BROWSER_VERSION:" + tagSafe(bVer) + "]" +
+        " [DEVICE_TYPE:" + tagSafe(type) + "]" +
+        " [DEVICE_BRAND:" + tagSafe(brand) + "]" +
+        " [DEVICE_MODEL:" + tagSafe(model) + "]" +
+        " [ARCH:" + tagSafe(arch) + "]" +
+        " [BIT:" + tagSafe(bit) + "]" +
+        " [IP:" + tagSafe(net.ip) + "]" +
+        " [IP_LOC:" + tagSafe(net.loc) + "]" +
+        " [ISP:" + tagSafe(net.isp) + "]" +
+        " [TZ:" + tagSafe(tz) + "]";
+    }
+
+    function getExtraDevice() {
+      var s = window.screen || {};
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
       return {
-        userAgent: n.userAgent || "",
-        uaPlatform: uad && uad.platform ? uad.platform : "",
-        uaMobile: uad ? !!uad.mobile : null,
-        platform: n.platform || "",
-        language: n.language || "",
-        languages: (n.languages || []).slice(0, 5).join(", "),
-        timezone: tz,
-        tzOffset: new Date().getTimezoneOffset(),
-        screen: (s.width || 0) + "x" + (s.height || 0),
-        viewport: window.innerWidth + "x" + window.innerHeight,
-        pixelRatio: window.devicePixelRatio || 1,
-        touch: n.maxTouchPoints || 0,
-        memory: n.deviceMemory || "",
-        cpu: n.hardwareConcurrency || "",
-        connection: conn,
-        online: n.onLine,
-        standalone: standalone,
-        cookie: n.cookieEnabled,
-        referrer: document.referrer || "",
-        pageUrl: location.origin + location.pathname
+        screen: (s.width || 0) + "x" + (s.height || 0) + " @" + (window.devicePixelRatio || 1) + "x",
+        connection: c ? [c.effectiveType || "", c.downlink ? c.downlink + " Mbps" : "", c.saveData ? "hemat data" : ""]
+          .filter(Boolean).join(" · ") : "",
+        referrer: document.referrer || ""
       };
     }
 
@@ -780,39 +971,50 @@
      */
     function sendPortalLog(santriId, opts) {
       try {
-        var body = JSON.stringify({
-          action: "santri_portal_log",
-          santriId: santriId,
-          eventId: makeEventId(),
-          loginType: opts && opts.silent ? "sesi_tersimpan" : "manual",
-          remember: !!(opts && opts.remember),
-          viewedAt: Date.now(),
-          device: collectDeviceInfo()
-        });
+        var viewedAt = Date.now();
+        var eventId = makeEventId();
 
-        var attempt = function (n) {
-          var retry = function () {
-            if (n < 2) setTimeout(function () { attempt(n + 1); }, 3000 * (n + 1));
-          };
-          fetch(CONFIG.API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: body,
-            redirect: "follow",
-            // keepalive: tetap terkirim walau tab langsung ditutup.
-            // Percobaan ulang tanpa keepalive untuk browser yang rewel.
-            keepalive: n === 0
-          })
-            .then(function (res) { return res.text(); })
-            .then(function (text) {
-              var res = null;
-              try { res = JSON.parse(text); } catch (e) { }
-              if (res && res.retryable) retry();
+        var post = function (body) {
+          var attempt = function (n) {
+            var retry = function () {
+              if (n < 2) setTimeout(function () { attempt(n + 1); }, 3000 * (n + 1));
+            };
+            fetch(CONFIG.API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: body,
+              redirect: "follow",
+              keepalive: n === 0
             })
-            .catch(retry);
+              .then(function (res) { return res.text(); })
+              .then(function (text) {
+                var res = null;
+                try { res = JSON.parse(text); } catch (e) { }
+                if (res && res.retryable) retry();
+              })
+              .catch(retry);
+          };
+          attempt(0);
         };
 
-        var start = function () { attempt(0); };
+        var start = function () {
+          Promise.all([getHighEntropy(), getNetworkInfo()])
+            .then(function (r) { return buildDeviceInfo(r[0] || {}, r[1] || {}); })
+            .catch(function () { return buildDeviceInfo({}, {}); })
+            .then(function (deviceInfo) {
+              post(JSON.stringify({
+                action: "santri_portal_log",
+                santriId: santriId,
+                eventId: eventId,
+                loginType: opts && opts.silent ? "sesi_tersimpan" : "manual",
+                remember: !!(opts && opts.remember),
+                viewedAt: viewedAt,
+                deviceInfo: deviceInfo,
+                device: getExtraDevice()
+              }));
+            });
+        };
+
         if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 2000 });
         else setTimeout(start, 300);
       } catch (e) { }
