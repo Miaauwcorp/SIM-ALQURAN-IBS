@@ -718,6 +718,106 @@
       PARSE: "Server belum siap"
     };
 
+    /* ---------- Log masuk portal (berjalan setelah dashboard tampil) ---------- */
+    function makeEventId() {
+      try {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g, "");
+      } catch (e) { }
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+    }
+
+    function collectDeviceInfo() {
+      var n = navigator;
+      var s = window.screen || {};
+      var c = n.connection || n.mozConnection || n.webkitConnection || null;
+      var uad = n.userAgentData || null;
+      var tz = "";
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { }
+
+      var standalone = false;
+      try {
+        standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || n.standalone === true;
+      } catch (e) { }
+
+      var conn = "";
+      if (c) {
+        conn = [
+          c.effectiveType || "",
+          c.downlink ? c.downlink + " Mbps" : "",
+          c.saveData ? "hemat data" : ""
+        ].filter(Boolean).join(" · ");
+      }
+
+      return {
+        userAgent: n.userAgent || "",
+        uaPlatform: uad && uad.platform ? uad.platform : "",
+        uaMobile: uad ? !!uad.mobile : null,
+        platform: n.platform || "",
+        language: n.language || "",
+        languages: (n.languages || []).slice(0, 5).join(", "),
+        timezone: tz,
+        tzOffset: new Date().getTimezoneOffset(),
+        screen: (s.width || 0) + "x" + (s.height || 0),
+        viewport: window.innerWidth + "x" + window.innerHeight,
+        pixelRatio: window.devicePixelRatio || 1,
+        touch: n.maxTouchPoints || 0,
+        memory: n.deviceMemory || "",
+        cpu: n.hardwareConcurrency || "",
+        connection: conn,
+        online: n.onLine,
+        standalone: standalone,
+        cookie: n.cookieEnabled,
+        referrer: document.referrer || "",
+        pageUrl: location.origin + location.pathname
+      };
+    }
+
+    /*
+     * Dikirim terpisah dari login dan tidak ditunggu.
+     * Gagal atau lambat pun, santri tidak merasakannya.
+     * eventId yang sama dipakai saat mencoba ulang agar
+     * server tidak mencatat baris ganda.
+     */
+    function sendPortalLog(santriId, opts) {
+      try {
+        var body = JSON.stringify({
+          action: "santri_portal_log",
+          santriId: santriId,
+          eventId: makeEventId(),
+          loginType: opts && opts.silent ? "sesi_tersimpan" : "manual",
+          remember: !!(opts && opts.remember),
+          viewedAt: Date.now(),
+          device: collectDeviceInfo()
+        });
+
+        var attempt = function (n) {
+          var retry = function () {
+            if (n < 2) setTimeout(function () { attempt(n + 1); }, 3000 * (n + 1));
+          };
+          fetch(CONFIG.API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: body,
+            redirect: "follow",
+            // keepalive: tetap terkirim walau tab langsung ditutup.
+            // Percobaan ulang tanpa keepalive untuk browser yang rewel.
+            keepalive: n === 0
+          })
+            .then(function (res) { return res.text(); })
+            .then(function (text) {
+              var res = null;
+              try { res = JSON.parse(text); } catch (e) { }
+              if (res && res.retryable) retry();
+            })
+            .catch(retry);
+        };
+
+        var start = function () { attempt(0); };
+        if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 2000 });
+        else setTimeout(start, 300);
+      } catch (e) { }
+    }
+
     /* ---------- Masuk & muat data ---------- */
     function loadPortal(id, opts) {
       opts = opts || {};
@@ -757,6 +857,9 @@
         renderDashboard();
         showApp();
         Swal.close();
+
+        /* Catat masuk baru; Perbarui dan ganti periode tidak ikut dicatat */
+        if (!opts.periodeId && !opts.refresh) sendPortalLog(res.profile.santriId, opts);
 
         if (!opts.silent && !opts.periodeId && !opts.refresh) {
           Toast.fire({ icon: "success", title: "Assalamu'alaikum, " + firstName(res.profile.nama) });
