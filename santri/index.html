@@ -1237,7 +1237,7 @@
       var juzCells = "";
       for (var j = 1; j <= 30; j++) {
         var cell = jm[j];
-        var cls = cell.ziyadah.length ? "ziy" : (cell.murojaah.length ? "mur" : "");
+      var cls = cell.murojaah.length ? "mur" : (cell.ziyadah.length ? "ziy" : "");
         var label = "Juz " + j + ": " + cell.ziyadah.length + " setoran ziyadah, " + cell.murojaah.length + " murojaah";
         juzCells += '<button type="button" class="juz-cell ' + cls + '" data-juz="' + j + '" aria-label="' + esc(label) + '" title="' + esc(label) + '"' +
           (cls ? "" : " disabled") + ">" + j + "</button>";
@@ -1314,8 +1314,8 @@
           "</div>" +
           '<div class="juz-grid">' + juzCells + "</div>" +
           '<div class="legend">' +
-            '<span><i class="l-ziy"></i>Ada setoran ziyadah</span>' +
-            '<span><i class="l-mur"></i>Hanya murojaah</span>' +
+           '<span><i class="l-mur"></i>Ada setoran murojaah</span>' +
+'<span><i class="l-ziy"></i>Hanya ziyadah</span>' +
             '<span><i class="l-none"></i>Belum ada setoran</span>' +
           "</div>" +
         "</section>" +
