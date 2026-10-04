@@ -1527,7 +1527,6 @@
           '<p style="margin:8px 0;font-weight:700;color:var(--deep)">' + cell.status + '</p>' +
           '<p style="margin:0">Sisa ' + (cell.total - cell.done) + ' halaman</p>' +
           (cell.unresolved && !cell.complete ? '<p style="font-size:13px">Sebagian rincian halaman belum terbaca.</p>' : '') +
-          '<p style="font-size:12px;margin:16px 0 0">' + esc(state.data.periode.label) + '</p>' +
           '<p style="margin:12px 0">' + cell.ziyadah.length + ' setoran ziyadah dan ' + cell.murojaah.length + ' murojaah.</p>' +
           (items.length ? '<ul class="juz-list">' + items.map(function (e) {
             return '<li><b>' + esc(entryTitle(e)) + '<br><small>' + esc(clean(e.halDetail) || '—') + '</small></b><span>' +
