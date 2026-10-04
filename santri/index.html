@@ -288,11 +288,7 @@
   border-color: rgba(233,207,149,.55);
   color: #f3e3bd;
 }
-    .juz-cell.mur-progress { background: #236a57; border: 2px dashed #a9dcc7; color: #fff; }
-    .juz-cell { flex-direction: column; gap: 3px; }
-    .juz-cell small { font-size: 10px; font-weight: 500; }
-    .legend .l-progress { background: #236a57; border: 2px dashed #a9dcc7; }
-    .juz-cell:hover { outline: 2px solid #fff; outline-offset: 1px; }
+    .juz-cell:disabled { cursor: default; }
     .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; font-size: 13px; opacity: .85; }
     .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
    .legend .l-ziy {
@@ -1130,59 +1126,13 @@
       return list;
     }
 
-    function juzPageTotal(j) { return j === 1 ? 21 : (j === 30 ? 23 : 20); }
-
-    // halDetail uses page positions within a juz. Never treat ayat or
-    // jumlah (which includes repetitions) as unique page coverage.
-    function entryJuzPages(e, j) {
-      var detail = clean(e.halDetail);
-      var juzs = collectRange(e.juz, 30);
-      if (!detail || /ayat|\bQS\b|surah|surat/i.test(detail)) return null;
-      if (/juz/i.test(detail)) {
-        var segments = detail.split(/(?=juz\s*\d+)/i);
-        var matching = segments.filter(function (part) {
-          var match = part.match(/^juz\s*(\d+)\s*[:=–-]?\s*/i);
-          return match && +match[1] === j;
-        });
-        if (matching.length !== 1) return null;
-        detail = matching[0].replace(/^juz\s*\d+\s*[:=–-]?\s*/i, '').replace(/[;|]\s*$/, '');
-      } else if (juzs.length !== 1) {
-        return null; // Multi-juz entries need an explicit page allocation.
-      }
-      detail = detail.replace(/\b(?:halaman|hal|hlm|pages?)\.?\s*[:=]?\s*/gi, '')
-        .replace(/\s+s\.?d\.?\s+|\s+sampai\s+/gi, '-')
-        .replace(/\s+dan\s+/gi, ',').trim();
-      if (!/^\d+(?:\s*[-–—]\s*\d+)?(?:\s*[,;]\s*\d+(?:\s*[-–—]\s*\d+)?)*$/.test(detail)) return null;
-      var total = juzPageTotal(j), pages = {};
-      var valid = detail.split(/[,;]/).every(function (part) {
-        var bounds = part.trim().split(/\s*[-–—]\s*/).map(Number);
-        var start = bounds[0], end = bounds.length > 1 ? bounds[1] : start;
-        if (start < 1 || end > total || start > end) return false;
-        for (var n = start; n <= end; n++) pages[n] = true;
-        return true;
-      });
-      return valid ? Object.keys(pages).map(Number) : null;
-    }
-
     function juzMap(d) {
       var map = {};
-      for (var i = 1; i <= 30; i++) map[i] = { ziyadah: [], murojaah: [], pages: {}, unresolved: 0, total: juzPageTotal(i) };
+      for (var i = 1; i <= 30; i++) map[i] = { ziyadah: [], murojaah: [] };
       ["ziyadah", "murojaah"].forEach(function (kind) {
         ((d[kind] && d[kind].entries) || []).forEach(function (e) {
-          collectRange(e.juz, 30).forEach(function (j) {
-            map[j][kind].push(e);
-            if (kind !== "murojaah") return;
-            var pages = entryJuzPages(e, j);
-            if (pages === null) { map[j].unresolved++; return; }
-            pages.forEach(function (n) { map[j].pages[n] = true; });
-          });
+          collectRange(e.juz, 30).forEach(function (j) { map[j][kind].push(e); });
         });
-      });
-      Object.keys(map).forEach(function (j) {
-        var cell = map[j];
-        cell.done = Object.keys(cell.pages).length;
-        cell.complete = cell.done === cell.total;
-        cell.status = cell.complete ? "Selesai" : (cell.murojaah.length ? "Sedang berjalan" : "Belum dimulai");
       });
       return map;
     }
@@ -1287,11 +1237,10 @@
       var juzCells = "";
       for (var j = 1; j <= 30; j++) {
         var cell = jm[j];
-        var cls = cell.complete ? "mur" : (cell.murojaah.length ? "mur-progress" : (cell.ziyadah.length ? "ziy" : ""));
-        var countLabel = (cell.unresolved && !cell.complete ? "≥" : "") + cell.done + "/" + cell.total;
-        var label = "Juz " + j + ": murojaah " + countLabel + " halaman, " + cell.status;
-        juzCells += '<button type="button" class="juz-cell ' + cls + '" data-juz="' + j + '" aria-label="' + esc(label) + '" title="' + esc(label) + '">' +
-          '<span>' + j + '</span><small>' + countLabel + '</small></button>';
+      var cls = cell.murojaah.length ? "mur" : (cell.ziyadah.length ? "ziy" : "");
+        var label = "Juz " + j + ": " + cell.ziyadah.length + " setoran ziyadah, " + cell.murojaah.length + " murojaah";
+        juzCells += '<button type="button" class="juz-cell ' + cls + '" data-juz="' + j + '" aria-label="' + esc(label) + '" title="' + esc(label) + '"' +
+          (cls ? "" : " disabled") + ">" + j + "</button>";
       }
 
       /* grid hadits */
@@ -1355,7 +1304,7 @@
             "<div>" +
               '<h2 id="mushafTitle" class="sr-only">Peta setoran 30 juz</h2>' +
             '<div class="juz-big">' + num(m.totalHalaman, 1) + "<small>halaman</small></div>" +
-'<div class="juz-caption">Total murojaah yang telah dilakukan pada ' + esc(d.periode.label.toLowerCase() === "semua periode" ? "seluruh periode" : "periode " + d.periode.label) + ". Ketuk kotak juz untuk melihat jumlah halaman dan status. Progres mengikuti periode pilihan; halaman berulang dihitung satu kali.</div>" +
+'<div class="juz-caption">Total murojaah yang telah dilakukan pada ' + esc(d.periode.label.toLowerCase() === "semua periode" ? "seluruh periode" : "periode " + d.periode.label) + ". Ketuk kotak juz untuk melihat setorannya.</div>" +
             "</div>" +
             '<div class="figs">' +
               '<div class="fig"><b>' + juzTouched + "</b><span>juz disetorkan</span></div>" +
@@ -1365,8 +1314,7 @@
           "</div>" +
           '<div class="juz-grid">' + juzCells + "</div>" +
           '<div class="legend">' +
-           '<span><i class="l-mur"></i>Murojaah selesai</span>' +
-           '<span><i class="l-progress"></i>Murojaah sedang berjalan</span>' +
+           '<span><i class="l-mur"></i>Ada setoran murojaah</span>' +
 '<span><i class="l-ziy"></i>Hanya ziyadah</span>' +
             '<span><i class="l-none"></i>Belum ada setoran</span>' +
           "</div>" +
@@ -1519,18 +1467,10 @@
 
       Swal.fire({
         title: "Juz " + j,
-        html: '<p style="margin:0 0 12px">Periode: <b>' + esc(state.data.periode.label) + '</b></p>' +
-          '<table class="detail-table"><tr><th>Status murojaah</th><td>' + cell.status + '</td></tr>' +
-          '<tr><th>Total halaman juz</th><td>' + cell.total + ' halaman</td></tr>' +
-          '<tr><th>Sudah dimurojaah</th><td>' + (cell.unresolved && !cell.complete ? 'Minimal ' : '') + cell.done + '/' + cell.total + ' halaman unik</td></tr>' +
-          '<tr><th>' + (cell.unresolved && !cell.complete ? 'Belum terverifikasi' : 'Sisa halaman') + '</th><td>' + (cell.total - cell.done) + ' halaman</td></tr>' +
-          '<tr><th>Halaman tercakup</th><td>' + (Object.keys(cell.pages).map(Number).sort(function (a, b) { return a - b; }).join(', ') || 'Belum ada') + '</td></tr></table>' +
-          (cell.unresolved ? '<p>' + cell.unresolved + ' catatan belum dapat dihitung karena rincian halaman tidak jelas. Gunakan nomor halaman dalam juz, misalnya Hal. 1–5; untuk beberapa juz: Juz 1: Hal. 1–21; Juz 2: Hal. 1–5. Jumlah setoran saja tidak menentukan kelengkapan.</p>' : '') +
-          '<p style="font-size:13px">Status selesai berarti seluruh halaman sudah dimurojaah pada periode ini, bukan konfirmasi hafalan selesai.</p>' +
-          '<p>' + cell.ziyadah.length + ' setoran ziyadah dan ' + cell.murojaah.length + ' murojaah.</p>' +
-          (items.length ? '<ul class="juz-list">' + items.slice(0, 40).map(function (e) {
-            return '<li><b>' + esc(entryTitle(e)) + '<br><small>' + esc(clean(e.halDetail) || 'Rincian halaman belum tersedia') + '</small></b><span>' + esc(KIND_LABEL[e.kind]) + ', ' + esc(clean(e.tanggal) || '-') + ', grade ' + esc(clean(e.grade) || '-') + '</span></li>';
-          }).join('') + '</ul>' + (items.length > 40 ? '<p>Menampilkan 40 setoran terbaru. Perhitungan mencakup seluruh setoran yang dimuat.</p>' : '') : '<p>Belum ada setoran pada periode ini.</p>'),
+        html: '<p style="margin:0 0 12px">' + cell.ziyadah.length + " setoran ziyadah dan " + cell.murojaah.length + " murojaah.</p>" +
+          '<ul class="juz-list">' + items.slice(0, 40).map(function (e) {
+            return "<li><b>" + esc(entryTitle(e)) + "</b><span>" + esc(KIND_LABEL[e.kind]) + ", " + esc(clean(e.tanggal) || "-") + ", grade " + esc(clean(e.grade) || "-") + "</span></li>";
+          }).join("") + "</ul>",
         confirmButtonText: "Tutup"
       });
     }
