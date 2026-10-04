@@ -1518,13 +1518,21 @@
     function showJuz(j) {
       var cell = state._juz && state._juz[j];
       if (!cell) return;
+      var items = cell.ziyadah.map(function (e) { return Object.assign({}, e, { kind: "ziyadah" }); })
+        .concat(cell.murojaah.map(function (e) { return Object.assign({}, e, { kind: "murojaah" }); }))
+        .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
       Swal.fire({
         title: "Juz " + j,
         html: '<div style="font-size:32px;font-weight:800;color:var(--deep)">' + cell.done + '/' + cell.total + ' <span style="font-size:16px">halaman</span></div>' +
           '<p style="margin:8px 0;font-weight:700;color:var(--deep)">' + cell.status + '</p>' +
           '<p style="margin:0">Sisa ' + (cell.total - cell.done) + ' halaman</p>' +
           (cell.unresolved && !cell.complete ? '<p style="font-size:13px">Sebagian rincian halaman belum terbaca.</p>' : '') +
-          '<p style="font-size:12px;margin:16px 0 0">' + esc(state.data.periode.label) + '</p>',
+          '<p style="font-size:12px;margin:16px 0 0">' + esc(state.data.periode.label) + '</p>' +
+          '<p style="margin:12px 0">' + cell.ziyadah.length + ' setoran ziyadah dan ' + cell.murojaah.length + ' murojaah.</p>' +
+          (items.length ? '<ul class="juz-list">' + items.map(function (e) {
+            return '<li><b>' + esc(entryTitle(e)) + '<br><small>' + esc(clean(e.halDetail) || '—') + '</small></b><span>' +
+              esc(KIND_LABEL[e.kind]) + ', ' + esc(clean(e.tanggal) || '—') + ', grade ' + esc(clean(e.grade) || '—') + '</span></li>';
+          }).join('') + '</ul>' : '<p>Belum ada setoran pada periode ini.</p>'),
         confirmButtonText: "Tutup"
       });
     }
