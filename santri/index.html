@@ -428,6 +428,15 @@
     .juz-list li { padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink); display: flex; justify-content: space-between; gap: 12px; }
     .juz-list li span { color: var(--muted); }
 
+    .identity .profile-row { display: flex; align-items: center; gap: 14px; margin: 0 0 12px; }
+.identity .profile-row h1 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.avatar { position: relative; flex: none; width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--surface); background: var(--soft); color: var(--deep); font-weight: 800; font-size: 26px; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--line); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.avatar .cam { position: absolute; right: -3px; bottom: -3px; width: 26px; height: 26px; border-radius: 50%; background: var(--surface); color: var(--primary); border: 2px solid var(--primary); display: grid; place-items: center; }
+.crop-canvas { display: block; width: 100%; max-width: 280px; aspect-ratio: 1; margin: 8px auto; border-radius: 12px; touch-action: none; cursor: grab; background: #f1f5f9; }
+.crop-zoom { width: 100%; max-width: 280px; }
+@media (max-width: 760px) { .avatar { width: 64px; height: 64px; font-size: 22px; } }
+
     /* ================= RESPONSIF ================= */
     @media (max-width: 900px) {
       .login { grid-template-columns: 1fr; }
@@ -524,6 +533,8 @@
       </form>
     </section>
   </main>
+
+  <input id="fotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" hidden>
 
   <!-- ================= DASHBOARD ================= -->
   <div id="appView" hidden>
@@ -1262,6 +1273,153 @@
       return { top: (+m[1]) + " " + mon, bottom: m[3].length === 2 ? "20" + m[3] : m[3] };
     }
 
+    /* ---------- Foto profil ---------- */
+var FOTO_KEY = "simSantriPortal.foto", FOTO_MAX = 466690;
+function initials(name) {
+  return String(name || "S").trim().split(/\s+/).slice(0, 2).map(function (x) { return x.charAt(0); }).join("").toUpperCase();
+}
+function fotoCacheGet(id) {
+  try { var c = JSON.parse(localStorage.getItem(FOTO_KEY) || "null"); return c && c.id === id && /^data:image\//.test(c.d) ? c.d : ""; }
+  catch (e) { return ""; }
+}
+function fotoCacheSet(id, d) { try { localStorage.setItem(FOTO_KEY, JSON.stringify({ id: id, d: d })); } catch (e) { } }
+function fotoCacheClear() { try { localStorage.removeItem(FOTO_KEY); } catch (e) { } }
+
+function setAvatar(url) {
+  var img = $("#avatarImg"), ini = $("#avatarInit");
+  if (!img || !ini) return;
+  if (url) { img.src = url; img.hidden = false; ini.hidden = true; }
+  else { img.removeAttribute("src"); img.hidden = true; ini.hidden = false; }
+}
+
+function bindFoto() {
+  var id = state.santriId;
+  var cached = fotoCacheGet(id);
+  if (cached) setAvatar(cached);
+  callApi({ action: "santri_portal_foto_get", santriId: id }).then(function (res) {
+    if (id !== state.santriId || !res || !res.success) return;
+    if (res.dataUrl) { setAvatar(res.dataUrl); fotoCacheSet(id, res.dataUrl); }
+    else { setAvatar(""); fotoCacheClear(); }
+  }).catch(function () { });
+  $("#avatarBtn").addEventListener("click", function () { $("#fotoInput").click(); });
+}
+
+function loadHeic() {
+  return new Promise(function (ok, fail) {
+    if (window.heic2any) return ok();
+    var s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+    s.onload = ok; s.onerror = function () { fail(new Error("Gagal memuat konverter HEIC.")); };
+    document.head.appendChild(s);
+  });
+}
+
+function openCropper(blob) {
+  var url = URL.createObjectURL(blob), im = new Image();
+  im.onerror = function () {
+    URL.revokeObjectURL(url);
+    Swal.fire({ icon: "error", title: "Foto tidak bisa dibaca", confirmButtonText: "Tutup" });
+  };
+  im.onload = function () {
+    URL.revokeObjectURL(url);
+    var V = 280, zoomVal = 1, ox = 0, oy = 0, drag = null, canvas, zoom;
+    function base() { return V / Math.min(im.naturalWidth, im.naturalHeight); }
+    function clamp() {
+      var s = base() * zoomVal;
+      ox = Math.min(0, Math.max(V - im.naturalWidth * s, ox));
+      oy = Math.min(0, Math.max(V - im.naturalHeight * s, oy));
+    }
+    function paint(ctx, size, mask) {
+      var k = size / V, s = base() * zoomVal;
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(im, ox * k, oy * k, im.naturalWidth * s * k, im.naturalHeight * s * k);
+      if (mask) {
+        ctx.save();
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath(); ctx.rect(0, 0, size, size);
+        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2, true);
+        ctx.fill("evenodd");
+        ctx.restore();
+      }
+    }
+    function redraw() { paint(canvas.getContext("2d"), V, true); }
+
+    Swal.fire({
+      title: "Atur foto profil",
+      html: '<p style="margin:0 0 4px;font-size:14px">Geser foto, lalu atur zoom.</p>' +
+        '<canvas id="cropCanvas" class="crop-canvas" width="280" height="280" aria-label="Area pemotongan foto"></canvas>' +
+        '<input id="cropZoom" class="crop-zoom" type="range" min="1" max="3" step="0.01" value="1" aria-label="Zoom foto">',
+      showCancelButton: true, confirmButtonText: "Simpan foto", cancelButtonText: "Batal",
+      reverseButtons: true, allowOutsideClick: false, showLoaderOnConfirm: true,
+      didOpen: function () {
+        canvas = document.getElementById("cropCanvas");
+        zoom = document.getElementById("cropZoom");
+        ox = (V - im.naturalWidth * base()) / 2;
+        oy = (V - im.naturalHeight * base()) / 2;
+        clamp(); redraw();
+        zoom.oninput = function () {
+          var oldS = base() * zoomVal, cx = (V / 2 - ox) / oldS, cy = (V / 2 - oy) / oldS;
+          zoomVal = Number(zoom.value) || 1;
+          var newS = base() * zoomVal;
+          ox = V / 2 - cx * newS; oy = V / 2 - cy * newS;
+          clamp(); redraw();
+        };
+        canvas.onpointerdown = function (e) {
+          drag = { x: e.clientX, y: e.clientY, ox: ox, oy: oy };
+          try { canvas.setPointerCapture(e.pointerId); } catch (x) { }
+        };
+        canvas.onpointermove = function (e) {
+          if (!drag) return;
+          var ratio = V / canvas.getBoundingClientRect().width;
+          ox = drag.ox + (e.clientX - drag.x) * ratio;
+          oy = drag.oy + (e.clientY - drag.y) * ratio;
+          clamp(); redraw();
+        };
+        canvas.onpointerup = canvas.onpointercancel = function () { drag = null; };
+      },
+      preConfirm: function () {
+        var out = document.createElement("canvas"); out.width = out.height = 512;
+        paint(out.getContext("2d"), 512, false);
+        var d = out.toDataURL("image/jpeg", 0.85);
+        if (d.length > FOTO_MAX) d = out.toDataURL("image/jpeg", 0.65);
+        if (d.length > FOTO_MAX) { Swal.showValidationMessage("Foto terlalu besar. Pilih foto lain."); return false; }
+        return callApi({ action: "santri_portal_foto_save", santriId: state.santriId, dataUrl: d })
+          .then(function (res) {
+            if (!res || !res.success) { Swal.showValidationMessage((res && res.message) || "Foto gagal disimpan."); return false; }
+            return res.dataUrl || d;
+          })
+          .catch(function (err) { Swal.showValidationMessage(err.message || "Koneksi bermasalah."); return false; });
+      }
+    }).then(function (r) {
+      if (r.isConfirmed && r.value) {
+        setAvatar(r.value); fotoCacheSet(state.santriId, r.value);
+        Toast.fire({ icon: "success", title: "Foto profil disimpan" });
+      }
+    });
+  };
+  im.src = url;
+}
+
+$("#fotoInput").addEventListener("change", function () {
+  var file = this.files[0]; this.value = "";
+  if (!file) return;
+  var heic = /^image\/(heic|heif)$/.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+  if (!heic && !/^image\/(jpeg|png|webp)$/.test(file.type)) {
+    Swal.fire({ icon: "info", title: "Format belum didukung", text: "Gunakan foto JPG, PNG, WebP, atau HEIC.", confirmButtonText: "Mengerti" });
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    Swal.fire({ icon: "info", title: "Foto terlalu besar", text: "Ukuran foto maksimal 10 MB.", confirmButtonText: "Mengerti" });
+    return;
+  }
+  if (!heic) return openCropper(file);
+  showLoading("Menyiapkan foto");
+  loadHeic()
+    .then(function () { return heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 }); })
+    .then(function (out) { Swal.close(); openCropper(Array.isArray(out) ? out[0] : out); })
+    .catch(function (e) { Swal.fire({ icon: "error", title: "Foto HEIC gagal diproses", text: e.message || "", confirmButtonText: "Tutup" }); });
+});
+
     /* ---------- Render ---------- */
     function renderDashboard() {
       var d = state.data;
@@ -1342,7 +1500,13 @@
         '<section class="identity">' +
           "<div>" +
             '<p class="greet">Assalamu\'alaikum,</p>' +
-            "<h1>" + esc(p.nama) + "</h1>" +
+                      '<div class="profile-row">' +
+              '<button type="button" class="avatar" id="avatarBtn" aria-label="Tambah atau ganti foto profil" title="Tambah atau ganti foto profil">' +
+                '<img id="avatarImg" alt="Foto profil" hidden><span id="avatarInit">' + esc(initials(p.nama)) + '</span>' +
+                '<span class="cam" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/></svg></span>' +
+              '</button>' +
+              "<h1>" + esc(p.nama) + "</h1>" +
+            "</div>" +
             '<div class="chips">' +
               '<span class="chip">Kelas ' + esc(p.kelas || "-") + "</span>" +
               statusChip +
@@ -1429,6 +1593,7 @@
       state._juz = jm;
       renderHistory();
       bindDashboard();
+     bindFoto();
     }
 
     function segBtn(value, label) {
@@ -1617,6 +1782,7 @@
         $("#dashboard").innerHTML = "";
         $("#santriIdInput").value = "";
         $("#rememberInput").checked = false;
+                fotoCacheClear();
         showLogin();
         Toast.fire({ icon: "success", title: "Kamu sudah keluar" });
       });
