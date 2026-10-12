@@ -1175,40 +1175,59 @@
 
     // Accept mushaf page numbers and page positions within one juz.
     // Repeated pages count once; jumlah is not unique page coverage.
-    function entryJuzPages(e, j) {
-      var detail = clean(e.halDetail);
-      var juzs = collectRange(e.juz, 30);
-      if (!detail || /ayat|\bQS\b|surah|surat/i.test(detail)) return null;
-      if (/juz/i.test(detail)) {
-        var segments = detail.split(/(?=juz\s*\d+)/i);
-        var matching = segments.filter(function (part) {
-          var match = part.match(/^juz\s*(\d+)\s*[:=–-]?\s*/i);
-          return match && +match[1] === j;
-        });
-        if (matching.length !== 1) return null;
-        detail = matching[0].replace(/^juz\s*\d+\s*[:=–-]?\s*/i, '').replace(/[;|]\s*$/, '');
-      } else if (juzs.length !== 1) {
-        return null; // Multi-juz entries need an explicit page allocation.
-      }
-      detail = detail.replace(/\b(?:halaman|hal|hlm|pages?)\.?\s*[:=]?\s*/gi, '')
-        .replace(/\s+s\.?d\.?\s+|\s+sampai\s+/gi, '-')
-        .replace(/\s+dan\s+/gi, ',').trim();
-      if (!/^\d+(?:\s*[-–—]\s*\d+)?(?:\s*[,;]\s*\d+(?:\s*[-–—]\s*\d+)?)*$/.test(detail)) return null;
-      var total = juzPageTotal(j), pages = {};
-      var firstPage = j === 1 ? 1 : (j - 1) * 20 + 2;
-      var lastPage = firstPage + total - 1;
-      var numbers = detail.match(/\d+/g).map(Number);
-      var mushaf = numbers.every(function (n) { return n >= firstPage && n <= lastPage; });
-      var valid = detail.split(/[,;]/).every(function (part) {
-        var bounds = part.trim().split(/\s*[-–—]\s*/).map(Number);
-        var start = bounds[0], end = bounds.length > 1 ? bounds[1] : start;
-        if (mushaf) { start -= firstPage - 1; end -= firstPage - 1; }
-        if (start < 1 || end > total || start > end) return false;
-        for (var n = start; n <= end; n++) pages[n] = true;
-        return true;
-      });
-      return valid ? Object.keys(pages).map(Number) : null;
-    }
+   function juzFirstPage(j) { return j === 1 ? 1 : (j - 1) * 20 + 2; }
+
+function entryJuzPages(e, j) {
+  var detail = clean(e.halDetail);
+  var juzs = collectRange(e.juz, 30);
+  if (!detail || /ayat|\bQS\b|surah|surat/i.test(detail)) return null;
+  var multiAbs = false;
+  if (/juz/i.test(detail)) {
+    var segments = detail.split(/(?=juz\s*\d+)/i);
+    var matching = segments.filter(function (part) {
+      var match = part.match(/^juz\s*(\d+)\s*[:=–-]?\s*/i);
+      return match && +match[1] === j;
+    });
+    if (matching.length !== 1) return null;
+    detail = matching[0].replace(/^juz\s*\d+\s*[:=–-]?\s*/i, '').replace(/[;|]\s*$/, '');
+  } else if (juzs.length !== 1) {
+    if (!juzs.length) return null;
+    multiAbs = true; // lintas juz: angka = halaman mushaf absolut
+  }
+  detail = detail.replace(/\b(?:halaman|hal|hlm|pages?)\.?\s*[:=]?\s*/gi, '')
+    .replace(/\s+s\.?d\.?\s+|\s+sampai\s+/gi, '-')
+    .replace(/\s+dan\s+/gi, ',').trim();
+  if (!/^\d+(?:\s*[-–—]\s*\d+)?(?:\s*[,;]\s*\d+(?:\s*[-–—]\s*\d+)?)*$/.test(detail)) return null;
+
+  var total = juzPageTotal(j), pages = {};
+  var firstPage = juzFirstPage(j);
+  var lastPage = firstPage + total - 1;
+
+  if (multiAbs) {
+    var minJ = Math.min.apply(null, juzs), maxJ = Math.max.apply(null, juzs);
+    var lo = juzFirstPage(minJ), hi = juzFirstPage(maxJ) + juzPageTotal(maxJ) - 1;
+    var okAbs = detail.split(/[,;]/).every(function (part) {
+      var b = part.trim().split(/\s*[-–—]\s*/).map(Number);
+      var s = b[0], en = b.length > 1 ? b[1] : s;
+      if (s < lo || en > hi || s > en) return false;
+      for (var n = Math.max(s, firstPage); n <= Math.min(en, lastPage); n++) pages[n - firstPage + 1] = true;
+      return true;
+    });
+    return okAbs ? Object.keys(pages).map(Number) : null;
+  }
+
+  var numbers = detail.match(/\d+/g).map(Number);
+  var mushaf = numbers.every(function (n) { return n >= firstPage && n <= lastPage; });
+  var valid = detail.split(/[,;]/).every(function (part) {
+    var bounds = part.trim().split(/\s*[-–—]\s*/).map(Number);
+    var start = bounds[0], end = bounds.length > 1 ? bounds[1] : start;
+    if (mushaf) { start -= firstPage - 1; end -= firstPage - 1; }
+    if (start < 1 || end > total || start > end) return false;
+    for (var n = start; n <= end; n++) pages[n] = true;
+    return true;
+  });
+  return valid ? Object.keys(pages).map(Number) : null;
+}
 
     function juzMap(d) {
       var map = {};
