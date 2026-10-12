@@ -1040,6 +1040,7 @@
       opts = opts || {};
       var body = { action: "santri_portal_login", santriId: id };
       if (opts.periodeId) body.periodeId = opts.periodeId;
+      if (opts.refresh) body.refresh = true;
 
       showLoading(
         opts.refresh ? "Memperbarui data" : (opts.periodeId ? "Memuat periode" : (opts.silent ? "Membuka portal" : "Memeriksa ID santri")),
@@ -1496,6 +1497,13 @@ $("#fotoInput").addEventListener("change", function () {
       var truncated = (z.entriesTruncated || m.entriesTruncated || h.entriesTruncated)
         ? '<p class="panel-sub">Menampilkan riwayat terbaru saja. Riwayat lengkap tersedia di rapor.</p>' : "";
 
+      var ranking = d.ranking || {};
+      function rankChip(label, value, title) {
+        var valid = Number.isInteger(value) && value > 0;
+        return '<span class="chip" title="' + esc(title) + '">' +
+          label + ' ' + (valid ? '#' + value : '—') + '</span>';
+      }
+
       $("#dashboard").innerHTML =
         '<section class="identity">' +
           "<div>" +
@@ -1508,6 +1516,8 @@ $("#fotoInput").addEventListener("change", function () {
               "<h1>" + esc(p.nama) + "</h1>" +
             "</div>" +
             '<div class="chips">' +
+              rankChip('Global Rank', ranking.globalRank, 'Seluruh santri • capaian seluruh waktu') +
+              rankChip('Local Rank', ranking.localRank, ranking.rombel ? 'Rombel ' + ranking.rombel + ' • capaian seluruh waktu' : 'Rombel belum tersedia') +
               '<span class="chip">Kelas ' + esc(p.kelas || "-") + "</span>" +
               statusChip +
               '<button type="button" class="chip chip-id" id="copyIdBtn" title="Salin ID santri">' + esc(p.santriId) + "</button>" +
