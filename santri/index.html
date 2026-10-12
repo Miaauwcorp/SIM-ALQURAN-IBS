@@ -1058,9 +1058,28 @@
       }
       if (!data.rankingPending) return;
       if (!data.rankingToken) { finish(null); return; }
-      callApi({ action: 'santri_portal_rank', rankingToken: data.rankingToken })
-        .then(function (res) { finish(res && res.success ? res.ranking : null); })
-        .catch(function () { finish(null); });
+      var deadline = Date.now() + 45000;
+      var finished = false;
+      var timeout = setTimeout(function () { complete(null); }, 45000);
+      function complete(ranking) {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timeout);
+        finish(ranking);
+      }
+      function requestRank() {
+        if (finished || state.data !== data) return;
+        callApi({ action: 'santri_portal_rank', rankingToken: data.rankingToken })
+          .then(function (res) {
+            if (finished || state.data !== data) return;
+            if (res && res.success && res.pending && Date.now() < deadline) {
+              setTimeout(requestRank, 2000); return;
+            }
+            complete(res && res.success ? res.ranking : null);
+          })
+          .catch(function () { complete(null); });
+      }
+      requestRank();
     }
 
     /* ---------- Masuk & muat data ---------- */
