@@ -1041,44 +1041,75 @@
       } catch (e) { }
     }
 
-    function loadPortalRanking(data) {
+      function loadPortalRanking(data) {
       if (state.data !== data) return;
+
       function finish(ranking) {
         if (state.data !== data) return;
         data.rankingPending = false;
         data.ranking = ranking || {};
+
         var box = document.getElementById("portalRanks");
         if (!box) return;
+
         function chip(label, value, title) {
           return '<span class="chip" title="' + esc(title) + '">' + label + ' ' +
             (Number.isInteger(value) && value > 0 ? '#' + value : '—') + '</span>';
         }
-        box.innerHTML = chip('Global Rank', data.ranking.globalRank, 'Seluruh santri • capaian seluruh waktu') +
-          chip('Local Rank', data.ranking.localRank, data.ranking.rombel ? 'Rombel ' + data.ranking.rombel : 'Ranking belum tersedia');
+
+        box.innerHTML =
+          chip('Global Rank', data.ranking.globalRank, 'Seluruh santri • capaian seluruh waktu') +
+          chip('Local Rank', data.ranking.localRank,
+            data.ranking.rombel ? 'Rombel ' + data.ranking.rombel : 'Ranking belum tersedia');
       }
+
       if (!data.rankingPending) return;
       if (!data.rankingToken) { finish(null); return; }
-      var deadline = Date.now() + 45000;
+
+      var LIMIT_MS = 90000;
+      var deadline = Date.now() + LIMIT_MS;
+      var delay = 2000;
       var finished = false;
-      var timeout = setTimeout(function () { complete(null); }, 45000);
+      var timeout = setTimeout(function () { complete(null); }, LIMIT_MS);
+
       function complete(ranking) {
         if (finished) return;
         finished = true;
         clearTimeout(timeout);
         finish(ranking);
       }
+
+      function retryLater() {
+        if (finished || state.data !== data) return;
+        if (Date.now() >= deadline) { complete(null); return; }
+        setTimeout(requestRank, delay);
+        delay = Math.min(delay + 1000, 5000);
+      }
+
       function requestRank() {
         if (finished || state.data !== data) return;
+
         callApi({ action: 'santri_portal_rank', rankingToken: data.rankingToken })
           .then(function (res) {
             if (finished || state.data !== data) return;
-            if (res && res.success && res.pending && Date.now() < deadline) {
-              setTimeout(requestRank, 2000); return;
-            }
+
+            if (res && res.success && res.pending) { retryLater(); return; }
+
             complete(res && res.success ? res.ranking : null);
           })
-          .catch(function () { complete(null); });
+          .catch(function (err) {
+            if (finished || state.data !== data) return;
+
+            /* Timeout/koneksi: server mungkin masih membangun ranking. */
+            if (err && (err.code === "TIMEOUT" || err.code === "NETWORK")) {
+              retryLater();
+              return;
+            }
+
+            complete(null);
+          });
       }
+
       requestRank();
     }
 
