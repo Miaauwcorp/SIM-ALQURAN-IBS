@@ -691,7 +691,7 @@
     /* ---------- API ---------- */
     function PortalError(code, message) { this.code = code; this.message = message; }
 
-    function callApi(body, timeoutMs) {
+    function callApi(body) {
       if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(CONFIG.API_URL) ||
           CONFIG.API_URL.indexOf("GANTI_DENGAN") >= 0) {
         return Promise.reject(new PortalError("CONFIG",
@@ -699,7 +699,7 @@
       }
 
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, timeoutMs || CONFIG.TIMEOUT_MS);
+      var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, CONFIG.TIMEOUT_MS);
 
       return fetch(CONFIG.API_URL, {
         method: "POST",
@@ -1631,7 +1631,6 @@ $("#fotoInput").addEventListener("change", function () {
           "</div>" +
         "</section>" +
 
-        '<section class="panel portal-services"><div><h2>Laporan dan koreksi</h2><p class="panel-sub">Unduh laporan bulanan. Untuk koreksi, buka detail setoran pada riwayat.</p></div><button type="button" class="btn btn-sm" id="monthlyReportBtn">Unduh Laporan Bulanan</button></section>' +
         '<section class="panel mushaf" aria-labelledby="mushafTitle">' +
           '<div class="mushaf-top">' +
             "<div>" +
@@ -1789,11 +1788,8 @@ $("#fotoInput").addEventListener("change", function () {
         html: '<table class="detail-table">' + rows.map(function (r) {
           return "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + "</td></tr>";
         }).join("") + "</table>",
-        confirmButtonText: "Tutup",
-        showDenyButton: true,
-        denyButtonText: "Ajukan Koreksi",
-        denyButtonColor: "#0b3d2c"
-      }).then(function(result) { if (result.isDenied) requestCorrection(e); });
+        confirmButtonText: "Tutup"
+      });
     }
 
     function showJuz(j) {
@@ -1818,7 +1814,6 @@ $("#fotoInput").addEventListener("change", function () {
     }
 
     function bindDashboard() {
-      $("#monthlyReportBtn").addEventListener("click", downloadMonthlyReport);
       $("#periodSelect").addEventListener("change", function (ev) {
         loadPortal(state.santriId, { periodeId: ev.target.value });
       });
@@ -1856,91 +1851,6 @@ $("#fotoInput").addEventListener("change", function () {
         } else {
           Swal.fire({ title: "ID santri", text: id, confirmButtonText: "Tutup" });
         }
-      });
-    }
-
-    /* ---------- Laporan PDF bulanan ---------- */
-    function downloadMonthlyReport() {
-      if (!state.data) return;
-      var santriId = state.santriId, periodeId = state.data.periode.id;
-      var now = new Date();
-      var defaultMonth = new Intl.DateTimeFormat('sv-SE', {timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit'}).format(now);
-      Swal.fire({
-        title: 'Laporan bulanan',
-        html: '<label for="reportMonth" class="field-label">Bulan laporan</label><input id="reportMonth" type="month" class="swal2-input" value="'+defaultMonth+'">'+
-          '<p class="hint">Periode: '+esc(state.data.periode.label)+'. Laporan memuat setoran pada bulan yang dipilih dalam periode ini.</p>',
-        confirmButtonText: 'Buat PDF', showCancelButton:true, cancelButtonText:'Batal',
-        showLoaderOnConfirm:true, allowOutsideClick:function() { return !Swal.isLoading(); },
-        preConfirm: function() {
-          var month = document.getElementById('reportMonth').value;
-          if (!/^(19|20|21)\d{2}-(0[1-9]|1[0-2])$/.test(month)) { Swal.showValidationMessage('Pilih bulan dan tahun yang valid.'); return false; }
-          return callApi({action:'santri_portal_monthly_pdf',santriId:santriId,periodeId:periodeId,month:month}, 120000)
-            .then(function(res) {
-              if (!res || !res.success || !res.base64) { Swal.showValidationMessage(res && res.message || 'PDF belum dapat dibuat.'); return false; }
-              return res;
-            }).catch(function(err) { Swal.showValidationMessage(err.message || 'Gagal membuat laporan.'); return false; });
-        }
-      }).then(function(r) {
-        if (!r.isConfirmed || !r.value) return;
-        try {
-          var binary=atob(r.value.base64), bytes=new Uint8Array(binary.length);
-          for(var i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-          var url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
-          var filename=String(r.value.filename || 'Laporan_Bulanan.pdf').replace(/[^A-Za-z0-9_.-]/g,'_');
-          Swal.fire({icon:'success',title:'Laporan siap diunduh',html:'<a class="btn" href="'+url+'" download="'+esc(filename)+'">Unduh PDF</a>',confirmButtonText:'Tutup'})
-            .then(function() { setTimeout(function(){URL.revokeObjectURL(url);},60000); });
-        } catch(err) { Swal.fire({icon:'error',title:'PDF tidak dapat dibaca',text:'Silakan buat ulang laporan.'}); }
-      });
-    }
-
-    /* ---------- Koreksi setoran ---------- */
-    var correctionPending = {};
-    function requestCorrection(e) {
-      if (!e.entryKey) {
-        Swal.fire({icon:'info',title:'Server perlu diperbarui',text:'Admin perlu memasang PortalSantri.gs versi terbaru, lalu muat ulang portal.'});
-        return;
-      }
-      var santriId=state.santriId, periodeId=state.data.periode.id;
-      var fields=['Tanggal','Surah','Juz','Halaman / ayat','Hadits ke','Jumlah','Grade','Nilai','Muhafizh','Lainnya'].filter(function(f) {
-        return e.kind==='hadits' ? ['Surah','Juz','Halaman / ayat'].indexOf(f)<0 : f!=='Hadits ke';
-      });
-      Swal.fire({
-        title:'Ajukan koreksi',
-        html:'<div class="correction-form"><p><b>'+esc(entryTitle(e))+'</b><br>'+esc(e.tanggal)+' · '+esc(KIND_LABEL[e.kind])+'</p>'+
-          '<p class="hint">'+esc(entryMeta(e))+'<br>Grade: '+esc(e.grade || '—')+' · Nilai: '+esc(e.nilai == null ? '—' : e.nilai)+'</p>'+
-          '<label for="correctionField">Bagian yang salah</label><select id="correctionField">'+fields.map(function(f){return '<option>'+esc(f)+'</option>';}).join('')+'</select>'+
-          '<label for="correctionProposed">Usulan data yang benar</label><textarea id="correctionProposed" maxlength="500" rows="3" placeholder="Tuliskan data yang seharusnya"></textarea>'+
-          '<label for="correctionReason">Alasan koreksi</label><textarea id="correctionReason" maxlength="800" rows="3" placeholder="Jelaskan kesalahan yang ditemukan"></textarea>'+
-          '<p class="hint">Identitas santri, data setoran, dan alasan akan dikirim ke grup Telegram pengelola untuk diperiksa. Data setoran tidak langsung berubah.</p></div>',
-        showCancelButton:true,confirmButtonText:'Periksa pengajuan',cancelButtonText:'Batal',
-        preConfirm:function() {
-          var field=document.getElementById('correctionField').value;
-          var proposed=document.getElementById('correctionProposed').value.trim();
-          var reason=document.getElementById('correctionReason').value.trim();
-          if (!proposed || proposed.length>500 || reason.length<5 || reason.length>800) {
-            Swal.showValidationMessage('Isi usulan dan alasan minimal 5 karakter.'); return false;
-          }
-          var signature=JSON.stringify([santriId,periodeId,e.kind,e.entryKey,field,proposed,reason]);
-          if (!correctionPending[signature]) correctionPending[signature]=makeUuid();
-          return {action:'santri_portal_correction',santriId:santriId,periodeId:periodeId,kind:e.kind,entryKey:e.entryKey,field:field,proposed:proposed,reason:reason,requestId:correctionPending[signature]};
-        }
-      }).then(function(form) {
-        if (!form.isConfirmed) return;
-        var payload=form.value;
-        Swal.fire({
-          title:'Periksa pengajuan',
-          html:'<div class="correction-form"><p><b>Setoran:</b> '+esc(entryTitle(e))+' — '+esc(e.tanggal)+'</p><p><b>Bagian:</b> '+esc(payload.field)+'</p><p class="correction-text"><b>Usulan:</b> '+esc(payload.proposed)+'</p><p class="correction-text"><b>Alasan:</b> '+esc(payload.reason)+'</p></div>',
-          showCancelButton:true,confirmButtonText:'Kirim Pengajuan',cancelButtonText:'Batal',showLoaderOnConfirm:true,
-          allowOutsideClick:function(){return !Swal.isLoading();},
-          preConfirm:function() {
-            return callApi(payload,120000).then(function(res) {
-              if (!res || !res.success) { Swal.showValidationMessage(res && res.message || 'Pengajuan belum berhasil dikirim.'); return false; }
-              return res;
-            }).catch(function(err) { Swal.showValidationMessage((err.message || 'Koneksi terputus.')+' Pengiriman mungkin masih diproses. Coba kembali dengan pengajuan yang sama untuk memeriksa hasilnya.'); return false; });
-          }
-        }).then(function(result) {
-          if(result.isConfirmed && result.value) Swal.fire({icon:'success',title:'Pengajuan terkirim',text:'Nomor: '+result.value.requestNumber+'. '+result.value.message,confirmButtonText:'Tutup'});
-        });
       });
     }
 
