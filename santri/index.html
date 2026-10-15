@@ -1393,14 +1393,118 @@ function setAvatar(url) {
 
 function bindFoto() {
   var id = state.santriId;
+  var button = $("#avatarBtn");
+  var changed = false;
+  var opening = false;
   var cached = fotoCacheGet(id);
+
+  function isCurrent() {
+    return id === state.santriId &&
+      button === $("#avatarBtn");
+  }
+
   if (cached) setAvatar(cached);
-  callApi({ action: "santri_portal_foto_get", santriId: id }).then(function (res) {
-    if (id !== state.santriId || !res || !res.success) return;
-    if (res.dataUrl) { setAvatar(res.dataUrl); fotoCacheSet(id, res.dataUrl); }
-    else { setAvatar(""); fotoCacheClear(); }
-  }).catch(function () { });
-  $("#avatarBtn").addEventListener("click", function () { $("#fotoInput").click(); });
+
+  callApi({
+    action: "santri_portal_foto_get",
+    santriId: id
+  }).then(function (res) {
+    // Abaikan respons lama setelah pengguna mulai mengubah foto.
+    if (!isCurrent() || changed || !res || !res.success) return;
+
+    if (res.dataUrl) {
+      setAvatar(res.dataUrl);
+      fotoCacheSet(id, res.dataUrl);
+    } else {
+      setAvatar("");
+      fotoCacheClear();
+    }
+  }).catch(function () {});
+
+  button.setAttribute("aria-label", "Kelola foto profil");
+  button.title = "Kelola foto profil";
+
+  button.addEventListener("click", function () {
+    if (opening || !isCurrent()) return;
+    opening = true;
+
+    Swal.fire({
+      title: "Foto profil",
+      text: "Pilih tindakan untuk foto profil santri.",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Tambah / ganti foto",
+      denyButtonText: "Hapus foto",
+      cancelButtonText: "Batal",
+      denyButtonColor: "#dc2626"
+    }).then(function (choice) {
+      if (!isCurrent()) return;
+
+      if (choice.isConfirmed) {
+        changed = true;
+        $("#fotoInput").click();
+        return;
+      }
+
+      if (!choice.isDenied) return;
+
+      return Swal.fire({
+        icon: "warning",
+        title: "Hapus foto profil?",
+        text: "Foto akan diganti dengan inisial nama santri.",
+        showCancelButton: true,
+        confirmButtonText: "Ya, hapus",
+        cancelButtonText: "Batal",
+        confirmButtonColor: "#dc2626",
+        showLoaderOnConfirm: true,
+        allowOutsideClick: function () {
+          return !Swal.isLoading();
+        },
+        allowEscapeKey: function () {
+          return !Swal.isLoading();
+        },
+        preConfirm: function () {
+          if (!isCurrent()) {
+            Swal.showValidationMessage("Halaman berubah. Buka ulang menu foto.");
+            return false;
+          }
+
+          changed = true;
+
+          return callApi({
+            action: "santri_portal_foto_delete",
+            santriId: id
+          }).then(function (res) {
+            if (!res || !res.success) {
+              Swal.showValidationMessage(
+                (res && res.message) || "Foto gagal dihapus."
+              );
+              return false;
+            }
+            return res;
+          }).catch(function () {
+            Swal.showValidationMessage(
+              "Koneksi bermasalah. Muat ulang untuk memeriksa hasil penghapusan."
+            );
+            return false;
+          });
+        }
+      }).then(function (result) {
+        if (!result.isConfirmed || !result.value || !isCurrent()) return;
+
+        setAvatar("");
+        fotoCacheClear();
+        $("#fotoInput").value = "";
+
+        Toast.fire({
+          icon: "success",
+          title: "Foto profil berhasil dihapus"
+        });
+      });
+    }).finally(function () {
+      opening = false;
+    });
+  });
 }
 
 function loadHeic() {
