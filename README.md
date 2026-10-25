@@ -13,15 +13,9 @@ Melalui sistem ini, ustadz/ustadzah dapat menginput setoran murojaah harian sant
 - Instagram: [@fathir.alhasbii](https://instagram.com/fathir.alhasbii)
 - Telegram: [@fathiralhasbi](https://t.me/fathiralhasbi)
 
-
-## Documentation
-
-[Documentation](https://linktodocumentation)
-
-
 ## Used By
 
-This project is used by the following companies:
+Project ini digunakan oleh lembaga berikut:
 
 - Pondok Pesantren IBS Riau
 - Madrasah Aliyah Swasta Al-Ihsan Riau
