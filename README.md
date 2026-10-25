@@ -11,7 +11,7 @@ Melalui sistem ini, ustadz/ustadzah dapat menginput setoran murojaah harian sant
 
 - Github: [@miaauwcorp](https://github.com/Miaauwcorp)
 - Instagram: [@fathir.alhasbii](https://instagram.com/fathir.alhasbii)
-- Telegram: [@fathir.alhasbi](https://t.me/fathiralhasbi)
+- Telegram: [@fathiralhasbi](https://t.me/fathiralhasbi)
 
 
 ## Documentation
